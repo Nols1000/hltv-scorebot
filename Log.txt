@@ -1,7 +1,0 @@
-Log = function () {
-    this.id = arguments[0];
-    this.type = arguments[1];
-	this.side = arguments[2];
-    this.html = arguments[3];
-    this.text = arguments[4];
-}
