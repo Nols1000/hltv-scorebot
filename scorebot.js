@@ -25,24 +25,23 @@ var roundTime = 0;
 
 module.exports = function() {
 	
-	var eve = new EventEmitter();
+	/*var eve = new EventEmitter();
 	
 	eve.on('connect', function(socket) {
 		console.log('connected');
 	});
 	
-	module.exports.connect('http://scorebot.hltv.org:10022', 359458, eve);
+	module.exports.connect('http://scorebot.hltv.org:10022', 359458, eve); */
 }
 
-module.exports.connect = function(url, matchid, events) {
+module.exports.connect = function(url, matchid, socketEvents) {
 	
 	var socket = io(url);
 	
 	var reconnected = false;
 	
 	socket.on('connect', function (res) {
-		
-		events.emit("connect", socket, true);
+		socketEvents.emit("connect", socket, true);
 		
 		if (!reconnected) {
             
