@@ -1,14 +1,13 @@
 #hltv-scorebot
 
-##Installation
-
-    npm install hltv-scorebot
-
 ##Commands
 
-- scorebot.connect(url, matchid, events)
-- on(event, callback)
-- [Player] getPlayerByName(name)
+- `scorebot.connect(url, matchid, events, displayText)`
+    - `url` should be `'http://scorebot.hltv.org:10022'` for almost all cases.
+    - `matchid` can be found on every HLTV page with ScoreBot currently enabled.
+    - `events` should be an EventEmitter object.
+    - `displayText` should be either true or false. By enabling displayText, all the events of the match will be logged to the console, like the real HLTV ScoreBot.
+- `scorebot.on(event, callback)`
 
 ##Classes
 
@@ -36,6 +35,10 @@
     - mapAttr
         - map
 - roundOver
+    - winner
+    - scores
+        - t
+        - ct
 - roundStarted
 - kill
     - killAttr
