@@ -1,14 +1,14 @@
 {
   "name": "hltv-scorebot",
-  "version": "0.1.2",
-  "description": "Connecting to HLTV-Scorebot",
+  "version": "0.1.4",
+  "description": "Connecting to HLTV's ScoreBot",
   "main": "scorebot.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Nols1000/hltv-scorebot.git"
+    "url": "https://github.com/andrewda/hltv-scorebot.git"
   },
   "dependencies": {
     "jquery": ">=2.1",
@@ -22,13 +22,13 @@
     "js"
   ],
   "author": {
-    "name": "nols1000"
+    "name": "andrewda"
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Nols1000/hltv-scorebot/issues"
+    "url": "https://github.com/andrewda/hltv-scorebot/issues"
   },
-  "homepage": "https://github.com/Nols1000/hltv-scorebot",
+  "homepage": "https://github.com/andrewda/hltv-scorebot",
   "readme": "README.md",
   "_id": "hltv-scorebot@0.1.2",
   "_shasum": "6ba05fe22774481ca67590d5034022a623723a05",
