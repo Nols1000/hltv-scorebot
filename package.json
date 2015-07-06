@@ -30,7 +30,7 @@
   },
   "homepage": "https://github.com/andrewda/hltv-scorebot",
   "readme": "README.md",
-  "_id": "hltv-scorebot@0.1.2",
+  "_id": "hltv-scorebot@0.1.4",
   "_shasum": "6ba05fe22774481ca67590d5034022a623723a05",
   "_from": "hltv-scorebot@"
 }
