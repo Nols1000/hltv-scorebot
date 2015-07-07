@@ -140,10 +140,10 @@ module.exports.connect = function(url, matchid, events, displayText) {
 						
 						if (k != -1) {
 							killAttr.headshot = true;
-							killAttr.weapon   = text.substring(j+4+1,k-1);
+							killAttr.weapon   = text.substring(j + 4 + 1, k - 1);
 						} else {
 							killAttr.headshot = false;
-							killAttr.weapon   = text.substring(j+4+1,text.length);
+							killAttr.weapon   = text.substring(j + 4 + 1, text.length);
 						}
 						
 						if (killAttr.aggressor != null) {
@@ -152,7 +152,7 @@ module.exports.connect = function(url, matchid, events, displayText) {
 						
 						ee.emit(type, killAttr)
 						
-						var nLog = new Log(id, score.t+score.ct+1, roundTime, type, side, html, text, killAttr);
+						var nLog = new Log(id, score.t + score.ct + 1, roundTime, type, side, html, text, killAttr);
 						logs.push(nLog);
 					}
 
@@ -168,7 +168,7 @@ module.exports.connect = function(url, matchid, events, displayText) {
 						
 						ee.emit(type, bombInteractionAttr);
 						
-						var nLog = new Log(id, score.t+score.ct+1, roundTime, type, side, html, text, bombInteractionAttr);
+						var nLog = new Log(id, score.t + score.ct + 1, roundTime, type, side, html, text, bombInteractionAttr);
 						logs.push(nLog);
                     }
 					
@@ -177,11 +177,11 @@ module.exports.connect = function(url, matchid, events, displayText) {
 						side = "ct";
 						
 						var i = text.indexOf('defused the bomb');
-						bombInteractionAttr.player = module.exports.getPlayerByName(text.substring(0,i-1));
+						bombInteractionAttr.player = module.exports.getPlayerByName(text.substring(0, i - 1));
 						
 						ee.emit(type, bombInteractionAttr);
 						
-						var nLog = new Log(id, score.t+score.ct+1, roundTime, type, side, html, text, bombInteractionAttr);
+						var nLog = new Log(id, score.t + score.ct + 1, roundTime, type, side, html, text, bombInteractionAttr);
 						logs.push(nLog);
                     }
 					
@@ -189,7 +189,7 @@ module.exports.connect = function(url, matchid, events, displayText) {
 						type = "playerLeft";
 						
 						var i = text.indexOf('has left the game');
-						connectionAttr.player = module.exports.getPlayerByName(text.substring(0,i-1));
+						connectionAttr.player = module.exports.getPlayerByName(text.substring(0, i - 1));
 						
 						if (connectionAttr.player != null) {
 							side = connectionAttr.player.side.toLowerCase();
@@ -197,7 +197,7 @@ module.exports.connect = function(url, matchid, events, displayText) {
 						
 						ee.emit(type, connectionAttr);
 						
-						var nLog = new Log(id, score.t+score.ct+1, roundTime, type, side, html, text, connectionAttr);
+						var nLog = new Log(id, score.t + score.ct + 1, roundTime, type, side, html, text, connectionAttr);
 						logs.push(nLog);
 					}
 				}
