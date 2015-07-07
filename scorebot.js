@@ -3,14 +3,17 @@ var $            = require('jquery')(require("jsdom").jsdom().parentWindow);
 var EventEmitter = require('events').EventEmitter;
 var ee           = new EventEmitter();
 
-var score          = {'t':  0, 'ct':  0};
 var matchRoundTime = 105;
 var matchBombTime  = 35;
 var roundTime      = 0;
 var matchRoundOver = false;
 var bombPlanted    = false;
+var logs           = [];
 
-var logs   = [];
+var score  = {
+	't':  0,
+	'ct':  0
+};
 var player = {
 	't' : [], 
 	'ct': [],
