@@ -40,6 +40,7 @@
     - scores
         - t
         - ct
+    - knifeRound
 - roundStarted
 - kill
     - killAttr
@@ -61,3 +62,5 @@
 - scoreUpdate
     - tScore
     - ctScore
+- nameChange
+- restart
