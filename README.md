@@ -51,7 +51,7 @@
 - bombPlanted
     - bombInteractionAttr
         - player
-- bomdDefused
+- bombDefused
     - bombInteractionAttr
         - player
 - playerLeft
