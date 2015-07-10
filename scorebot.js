@@ -6,8 +6,10 @@ var ee           = new EventEmitter();
 var matchRoundTime = 105;
 var matchBombTime  = 35;
 var roundTime      = 0;
+var knifeKills     = 0;
 var matchRoundOver = false;
 var bombPlanted    = false;
+var knifeRound     = false;
 var logs           = [];
 
 var score  = {
@@ -77,34 +79,54 @@ module.exports.connect = function(url, matchid, events, displayText) {
 						'ct' : score.ct
 					};
 					
+					if (displayText) {
+						console.log(text);
+					}
+					
 					if (text.indexOf('Map changed to:') != -1) {
-						var i = 15;
-						
 						type        = "mapChanged";
 						side        = "both";
-						mapAttr.map = text.substring(i + 1, text.length);
+						mapAttr.map = text.substring(16, text.length);
 						
 						ee.emit(type, mapAttr);
 						
 						var nLog = new Log(id, score.t + score.ct + 1, roundTime, type, side, html, text, defaultAttr);
 						logs.push(nLog);
+					}
+					
+					if (text.indexOf('Game restarted')) {
+						type = "restarted";
+						side = "both";
 						
+						ee.emit(type);
+						
+						var nLog = new Log(id, score.t + score.ct + 1, roundTime, type, side, html, text, defaultAttr);
+						logs.push(nLog);
 					}
 					
 					if (text.indexOf('Round over') != -1) {
+						console.log(knifeKills);
 						matchRoundOver = true;
 						type           = "roundOver";
 						side           = "both";
+						knifeKills     = 0;
 						
 						if (text.indexOf('Winner: T') != -1) {
 							winner.side = 'T';
 							scores.t = parseInt(parseInt(scores.t) + 1).toString();
+							
+							ee.emit(type, winner, scores, knifeRound);
 						} else if (text.indexOf('Winner: CT') != -1) {
 							winner.side = 'CT';
 							scores.ct = parseInt(parseInt(scores.ct) + 1).toString();
+							
+							ee.emit(type, winner, scores, knifeRound);
+						} else if (text.indexOf('Winner: DRAW') != -1) {
+							winner.side = 'CT';
+							scores.ct = parseInt(parseInt(scores.ct) + 1).toString();
 						}
-						
-						ee.emit(type, winner, scores);
+
+						knifeRound = false;
 
 						var nLog = new Log(id, score.t + score.ct + 1, roundTime, type, side, html, text, defaultAttr);
 						logs.push(nLog);
@@ -149,6 +171,14 @@ module.exports.connect = function(url, matchid, events, displayText) {
 							killAttr.weapon   = text.substring(j + 4 + 1, text.length);
 						}
 						
+						if (killAttr.weapon.indexOf("knife") > -1 || killAttr.weapon.indexOf("bayonet") > -1 || killAttr.weapon.indexOf("karam") > -1 || killAttr.weapon.indexOf("m9") > -1 || killAttr.weapon.indexOf("flip") > -1 || killAttr.weapon.indexOf("tactical") > -1 || killAttr.weapon.indexOf("huntsman") > -1 || killAttr.weapon.indexOf("falchion") > -1 || killAttr.weapon.indexOf("butterfly") > -1) {
+							knifeKills++;
+						}
+						
+						if (knifeKills >= 3) {
+							knifeRound = true;
+						}
+						
 						if (killAttr.aggressor != null) {
 							side = killAttr.aggressor.side.toLowerCase();
 						}
@@ -187,6 +217,12 @@ module.exports.connect = function(url, matchid, events, displayText) {
 						var nLog = new Log(id, score.t + score.ct + 1, roundTime, type, side, html, text, bombInteractionAttr);
 						logs.push(nLog);
                     }
+                    
+                    if (text.indexOf('changed name to') != -1) {
+                    	type = "nameChange";
+                    	
+                    	ee.emit(type);
+                    }
 					
 					if (text.indexOf('has left the game') != -1) {
 						type = "playerLeft";
@@ -219,13 +255,13 @@ module.exports.connect = function(url, matchid, events, displayText) {
                 for (var i = 0; i < scoreboard['CT'].length; i++) {
                     var p = scoreboard['CT'][i];
 					p = new Player(p['id'], 'CT', p['name'], p['score'], p['deaths']);
-                    updatePlayerList(p);
+                    //updatePlayerList(p);
                 }
 				
 				for (var i = 0; i < scoreboard['TERRORIST'].length; i++) {
                     var p = scoreboard['TERRORIST'][i];
                     p = new Player(p['id'], 'T', p['name'], p['score'], p['deaths']);
-                    updatePlayerList(p);
+                    //updatePlayerList(p);
                 }
 				
                 // sort players with most kills highest.
