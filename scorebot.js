@@ -105,11 +105,9 @@ module.exports.connect = function(url, matchid, events, displayText) {
 					}
 					
 					if (text.indexOf('Round over') != -1) {
-						console.log(knifeKills);
 						matchRoundOver = true;
 						type           = "roundOver";
 						side           = "both";
-						knifeKills     = 0;
 						
 						if (text.indexOf('Winner: T') != -1) {
 							winner.side = 'T';
@@ -126,8 +124,6 @@ module.exports.connect = function(url, matchid, events, displayText) {
 							scores.ct = parseInt(parseInt(scores.ct) + 1).toString();
 						}
 
-						knifeRound = false;
-
 						var nLog = new Log(id, score.t + score.ct + 1, roundTime, type, side, html, text, defaultAttr);
 						logs.push(nLog);
 					}
@@ -138,6 +134,8 @@ module.exports.connect = function(url, matchid, events, displayText) {
                         bombPlanted    = false;
 						type           = "roundStarted";
 						side           = "both";
+						knifeRound     = false;
+						knifeKills     = 0;
 						
 						ee.emit(type);
 						
@@ -171,7 +169,7 @@ module.exports.connect = function(url, matchid, events, displayText) {
 							killAttr.weapon   = text.substring(j + 4 + 1, text.length);
 						}
 						
-						if (killAttr.weapon.indexOf("knife") > -1 || killAttr.weapon.indexOf("bayonet") > -1 || killAttr.weapon.indexOf("karam") > -1 || killAttr.weapon.indexOf("m9") > -1 || killAttr.weapon.indexOf("flip") > -1 || killAttr.weapon.indexOf("tactical") > -1 || killAttr.weapon.indexOf("huntsman") > -1 || killAttr.weapon.indexOf("falchion") > -1 || killAttr.weapon.indexOf("butterfly") > -1) {
+						if (killAttr.weapon.indexOf("knife") > -1 || killAttr.weapon.indexOf("bayonet") > -1 || killAttr.weapon.indexOf("karam") > -1 || killAttr.weapon.indexOf("flip") > -1 || killAttr.weapon.indexOf("tactical") > -1 || killAttr.weapon.indexOf("huntsman") > -1 || killAttr.weapon.indexOf("falchion") > -1 || killAttr.weapon.indexOf("butterfly") > -1) {
 							knifeKills++;
 						}
 						
@@ -221,7 +219,15 @@ module.exports.connect = function(url, matchid, events, displayText) {
                     if (text.indexOf('changed name to') != -1) {
                     	type = "nameChange";
                     	
-                    	ee.emit(type);
+                    	var names    = text.replace("changed name to ", "");
+                    	var oldName  = names.split(" ")[0];
+                    	var newName  = names.split(" ")[1];
+                    	var nameAttr = {
+                    		'old': oldName,
+                    		'new': newName
+                    	};
+                    	
+                    	ee.emit(type, nameAttr);
                     }
 					
 					if (text.indexOf('has left the game') != -1) {
@@ -255,13 +261,13 @@ module.exports.connect = function(url, matchid, events, displayText) {
                 for (var i = 0; i < scoreboard['CT'].length; i++) {
                     var p = scoreboard['CT'][i];
 					p = new Player(p['id'], 'CT', p['name'], p['score'], p['deaths']);
-                    //updatePlayerList(p);
+                    updatePlayerList(p);
                 }
 				
 				for (var i = 0; i < scoreboard['TERRORIST'].length; i++) {
                     var p = scoreboard['TERRORIST'][i];
                     p = new Player(p['id'], 'T', p['name'], p['score'], p['deaths']);
-                    //updatePlayerList(p);
+                    updatePlayerList(p);
                 }
 				
                 // sort players with most kills highest.
@@ -409,4 +415,4 @@ function stringBoolean (bool) {
 	} else {
 		return " ";
 	}
-}
+}u
