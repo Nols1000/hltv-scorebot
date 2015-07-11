@@ -4,6 +4,6 @@ Player = function () {
     this.name    = arguments[2];
     this.kills   = arguments[3];
     this.deaths  = arguments[4];
-	this.death   = false;
+    this.death   = false;
     this.element = null;
 }
