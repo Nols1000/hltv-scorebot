@@ -63,4 +63,7 @@
     - tScore
     - ctScore
 - nameChange
+    - nameAttr
+        - old
+        - new
 - restart
