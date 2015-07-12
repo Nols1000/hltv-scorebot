@@ -4,19 +4,23 @@ var scorebot = require('hltv-scorebot');
 var EventEmitter = require('events').EventEmitter;
 var em = new EventEmitter();
 
-var currentScore = 'PLEASE WAIT FOR SCORE UPDATE!';
+var currentScore = 'PLEASE WAIT FOR THE SCORE TO UPDATE!';
 
+// Connect to the scorebot                           \/ Replace with your match's matchid
 scorebot.connect('http://scorebot.hltv.org:10022', 364856, em, false);
 
 scorebot.on('kill', function(data) {
+	// Log all kills to console
 	console.log(data.agressor, 'killed', data.victim, 'with their', data.weapon, data.headshot ?  "(headshot)" : "");
 });
 
 scorebot.on('scoreUpdate', function(t, ct) {
-    currentScore = 'CT:', ct, '|', 'T:', t;
+    // Update the score
+    currentScore = 'CT: ' + ct + ' | ' + 'T: ' + t;
 });
 
 scorebot.on('roundOver', function(data, scores) {
-	console.log('The', data.side + '\'s won the round!');
+	// Alert score and round winner to console.
+	console.log('The ' + data.side + '\'s won the round!');
 	console.log(currentScore);
 });
