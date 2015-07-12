@@ -415,4 +415,4 @@ function stringBoolean (bool) {
 	} else {
 		return " ";
 	}
-}u
+}
