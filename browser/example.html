@@ -2,42 +2,36 @@
 <html>
 	<head>
 		<title></title>
+		
+		<link rel="stylesheet" href="style/example.css" />
+		
 		<script src="lib/socket.io.js"></script>
 		<script src="lib/EventEmitter.min.js"></script>
 		<script src="Scorebot.js"></script>
 		<script src="examples/example.js"></script>
 	</head>
 	<body>
-		<input id="matchid" type="number" />
-		<button onclick="start(document.getElementById('matchid').value);">Start Bot</button>
-		<table id="table">
-			<thead>
-				<td>CT</td>
-				<td id="ctscore">0</td>
-				<td></td>
-			</thead>
-			<tbody id="ctplayer">
-			
-			</tbody>
-			
-			<thead>
-				<td>T</td>
-				<td id="tscore">0</td>
-				<td></td>
-			</thead>
-			<tbody id="tplayer">
-			
-			</tbody>
-		</table>
-		<div id="log">
-		
+		<div id="start">
+			<div id="start_wrapper">
+				<input id="matchid" type="number" />
+				<br />
+				<button id="startbtn" onclick="start(document.getElementById('matchid').value);">Start Bot</button>
+			</div>
 		</div>
-		<div style="display: none;">
-			<tr id="PlayerPrototype">
-				<td class="name">name</td>
-				<td class="kills">0</td>
-				<td class="deaths"></td>
-			</tr>
+		<div id="game">
+			<div id="header">	
+				<span id="team1"></span>
+				<span id="score1"></span>
+				<div id="header_wrapper">
+					<span id="bomb"></span>
+					<span id="time"></span>
+				</div>
+				<span id="score2"></span>
+				<span id="team2"></span>
+			</div>
+			<ul id="kills">
+			
+			</ul>
 		</div>
 	</body>
 </html>

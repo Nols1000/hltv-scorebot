@@ -190,7 +190,7 @@ Scorebot.prototype = {
 								this.knifeKills++;
 							}
 							
-							if (knifeKills >= 3) {
+							if (this.knifeKills >= 3) {
 								this.knifeRound = true;
 							}
 							
@@ -205,7 +205,7 @@ Scorebot.prototype = {
 						}
 
 						if (line.indexOf('planted the bomb') != -1) {
-							this.roundTime   = matchBombTime;
+							this.roundTime   = this.matchBombTime;
 							this.bombPlanted = true;
 							
 							type = "bombPlanted";
