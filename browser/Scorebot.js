@@ -279,17 +279,20 @@ Scorebot.prototype = {
 					for (var i = 0; i < scoreboard['CT'].length; i++) {
 						
 						var player = scoreboard['CT'][i];
-						player = new Player(player['id'], 'CT', player['name'], player['score'], player['deaths']);
-						
+						var p = new Player(player['id'], 'CT', player['name'], player['score'], player['deaths']);
+						this.updateScoreboard(p);
 					}
 					
 					for (var i = 0; i < scoreboard['TERRORIST'].length; i++) {
-						var p = scoreboard['TERRORIST'][i];
-						p = new Player(player['id'], 'T', player['name'], player['score'], player['deaths']);
+						var player = scoreboard['TERRORIST'][i];
+						var p = new Player(player['id'], 'T', player['name'], player['score'], player['deaths']);
+						this.updateScoreboard(p);
 					}
 					
 					this.player.t.sort(killDifference);
 					this.player.ct.sort(killDifference);
+					
+					this.emit('scoreboardUpdated', this.player);
 				}.bind(this));
 				
 				this.socket.emit('readyForMatch', this.matchid);
@@ -347,6 +350,22 @@ Scorebot.prototype = {
 		
 		return null;
 	},
+	getPlayerIndexOf: function(name) {
+		
+		for (var i = 0; i < this.player.ct.length; i++) {
+			if (name.indexOf(this.player.ct[i].name) != -1) {
+				return i;
+			}
+		}
+	
+		for (var j = 0; j < this.player.t.length; j++) {
+			if (name.indexOf(this.player.t[j].name) != -1) {
+				return j + this.player.ct.length;
+			}
+		}
+		
+		return -1;
+	},
 	updateScoreboard: function(newPlayer) {
 		
 		var oldPlayer = this.getPlayer(newPlayer.name);
@@ -355,11 +374,27 @@ Scorebot.prototype = {
 			
 			if(oldPlayer.side != newPlayer.side) {
 				
+				var i = getPlayerIndexOf(newPlayer.name);
+				
+				if(i >= this.player.ct.length) {
+					
+					i = i - this.player.ct.length;
+					
+					this.player.t.splice(i, 1);
+					this.player.ct.add(newPlayer);
+				}else {
+					
+					this.player.ct.splice(i, 1);
+					this.player.t.add(newPlayer);
+				}
 				
 			}else {
 				
 				oldPlayer = newPlayer;
 			}
+		}else {
+			
+			this.player[newPlayer.side].add(newPlayer);
 		}
 	}
 }

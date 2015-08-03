@@ -4,6 +4,9 @@ function start(matchid) {
 	bot.connect({
 		'matchid': matchid
 	});
+	
+	document.getElementById('start').classList.add('slidedown');
+	document.getElementById('game').classList.add('slideindown');
 }
 
 bot.on('score', function(score) {
@@ -55,6 +58,68 @@ bot.on('roundOver', function() {
 	
 	
 });
+
+bot.on('scoreboardUpdated', function(player) {
+	
+	var html = {
+		'ct': document.getElementById('scoreboard_ct'),
+		't' : document.getElementById('scoreboard_t')
+	};
+	
+	html.ct.innerHTML = '';
+	html.t.innerHTML = '';
+	
+	for(var i = 0; i < player.ct.length; i++) {
+		
+		var outerWrapper = document.createElement('tr');
+		var nameWrapper = document.createElement('td');
+		var killWrapper = document.createElement('td');
+		var deathWrapper = document.createElement('td');
+		var pointWrapper = document.createElement('td');
+		
+		nameWrapper.appendChild(document.createTextNode(player.ct[i].name));
+		killWrapper.appendChild(document.createTextNode(player.ct[i].kills));
+		deathWrapper.appendChild(document.createTextNode(player.ct[i].deaths));
+		pointWrapper.appendChild(document.createTextNode(player.ct[i].kills * 3));
+		
+		killWrapper.setAttribute('class', 'small');
+		deathWrapper.setAttribute('class', 'small');
+		pointWrapper.setAttribute('class', 'small');
+		
+		outerWrapper.appendChild(nameWrapper);
+		outerWrapper.appendChild(killWrapper);
+		outerWrapper.appendChild(deathWrapper);
+		outerWrapper.appendChild(pointWrapper);
+		
+		html.ct.appendChild(outerWrapper);
+	}
+	
+	for(var i = 0; i < player.t.length; i++) {
+		
+		var outerWrapper = document.createElement('tr');
+		var nameWrapper = document.createElement('td');
+		var killWrapper = document.createElement('td');
+		var deathWrapper = document.createElement('td');
+		var pointWrapper = document.createElement('td');
+		
+		nameWrapper.appendChild(document.createTextNode(player.t[i].name));
+		killWrapper.appendChild(document.createTextNode(player.t[i].kills));
+		deathWrapper.appendChild(document.createTextNode(player.t[i].deaths));
+		pointWrapper.appendChild(document.createTextNode(player.t[i].kills * 3));
+		
+		killWrapper.setAttribute('class', 'small');
+		deathWrapper.setAttribute('class', 'small');
+		pointWrapper.setAttribute('class', 'small');
+		
+		outerWrapper.appendChild(nameWrapper);
+		outerWrapper.appendChild(killWrapper);
+		outerWrapper.appendChild(deathWrapper);
+		outerWrapper.appendChild(pointWrapper);
+		
+		html.t.appendChild(outerWrapper);
+	}
+	
+})
 
 bot.on('time', function(time) {
 	
