@@ -1,6 +1,6 @@
 {
   "name": "hltv-scorebot",
-  "version": "0.1.4",
+  "version": "0.1.6",
   "description": "Connecting to HLTV's ScoreBot",
   "main": "scorebot.js",
   "scripts": {
@@ -11,8 +11,6 @@
     "url": "https://github.com/Nols1000/hltv-scorebot.git"
   },
   "dependencies": {
-    "jquery": ">=2.1",
-    "jsdom": "3.1.2",
 	"socket.io-client": "1.3.5"
   },
   "keywords": [

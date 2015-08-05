@@ -13,6 +13,22 @@ body {
 	overflow: hidden;
 }
 
+#bomb {
+	
+	background: url('../img/c4.png');
+	background-size: cover;
+}
+
+#bomb.planted {
+	
+	background: url('../img/c4_planted.png');
+}
+
+#bomb.defused {
+	
+	background: url('../img/c4_defused.png');
+}
+
 #start {
 	
 	position: absolute;
@@ -187,6 +203,7 @@ body {
 	
 	width: 100%;
 	padding: 5px;
+	margin-bottom: 10px;
 	text-align: right;
 	border: 2px solid #FF0000;
 	border-radius: 7px;
@@ -194,7 +211,7 @@ body {
 	background: rgba(0,0,0,0.5);
 }
 
-.terrorist {
+.t {
 	
 	color: #FF0000;
 	margin-left: 5px;
