@@ -47,6 +47,60 @@ function Scorebot() {
 	this.player         = { ct: [], t: []};
 	
 	this.__ee 			= new EventEmitter();
+	this.__timer        = {
+		
+		roundTimer: new Timer(this.matchRoundTime, function(time) {
+			this.emit('time', time)
+		}.bind(this)),
+		bombTimer : new Timer(this.matchBombTime, function(time) {
+			this.emit('time', time)
+		}.bind(this))
+	};
+	this.__isSave = false;
+	
+	this.on('kill', function(killAttr) {
+		console.log(killAttr.agressor.name, 'killed', killAttr.victim.name, 'with', killAttr.weapon, killAttr.headshot ? '(headshot)' : '');
+	});
+
+	this.on('mapChanged', function(mapAttr) {
+		console.log('Map changed to', mapAttr.map, '.');
+	});
+
+	this.on('restarted', function() {
+		console.log('Server was restarted.');
+	});
+
+	this.on('roundOver', function(winner) {
+		console.log(winner.side, 'wins the round.');
+	});
+
+	this.on('roundStarted', function() {
+		console.log('Round started.');
+	});
+
+	this.on('bombPlanted', function(bombInteractionAttr) {
+		console.log(bombInteractionAttr.player.name, 'planted the bomb.');
+	});
+
+	this.on('bombDefused', function(bombInteractionAttr) {
+		console.log(bombInteractionAttr.player.name, 'defused the bomb');
+	});
+
+	this.on('nameChange', function(nameAttr) {
+		console.log(nameAttr.old, 'is now', nameAttr.new);
+	});
+
+	this.on('playerLeft', function(connectionAttr) {
+		console.log(connectionAttr.player.name, 'left the game.');
+	});
+
+	this.on('score', function(score) {
+		console.log('New Score: T', score.t, '-', score.ct, 'CT');
+	});
+
+	this.on('scoreboardUpdated', function(player) {
+		//console.log(JSON.stringify(player));
+	});
 }
 
 Scorebot.prototype = {
@@ -157,6 +211,10 @@ Scorebot.prototype = {
 							type           = "roundStarted";
 							side           = "both";
 							
+							this.__timer.roundTimer.reset();
+							this.__timer.bombTimer.reset()
+							this.__timer.roundTimer.start();
+							
 							var log = new Log(id, this.score.t + this.score.ct + 1, this.roundTime, type, side, html, text, defaultAttr);
 							this.logs.push(log);
 
@@ -201,11 +259,10 @@ Scorebot.prototype = {
 							var log = new Log(id, this.score.t + this.score.ct + 1, this.roundTime, type, side, html, text, killAttr);
 							this.logs.push(log);
 							
-							this.emit(type, killAttr);
+							this.emitS(type, killAttr);
 						}
 
 						if (line.indexOf('planted the bomb') != -1) {
-							this.roundTime   = this.matchBombTime;
 							this.bombPlanted = true;
 							
 							type = "bombPlanted";
@@ -214,10 +271,13 @@ Scorebot.prototype = {
 							var i = text.indexOf('planted the bomb');
 							bombInteractionAttr.player = this.getPlayer(text.substring(0,i-1));
 							
+							this.__timer.roundTimer.reset();
+							this.__timer.bombTimer.start();
+							
 							var log = new Log(id, this.score.t + this.score.ct + 1, this.roundTime, type, side, html, text, bombInteractionAttr);
 							this.logs.push(log);
 							
-							this.emit(type, bombInteractionAttr);
+							this.emitS(type, bombInteractionAttr);
 						}
 						
 						if (line.indexOf('defused the bomb') != -1) {
@@ -230,7 +290,7 @@ Scorebot.prototype = {
 							var log = new Log(id, this.score.t + this.score.ct + 1, this.roundTime, type, side, html, text, bombInteractionAttr);
 							this.logs.push(log);
 							
-							this.emit(type, bombInteractionAttr);
+							this.emitS(type, bombInteractionAttr);
 						}
 						
 						if (text.indexOf('changed name to') != -1) {
@@ -262,7 +322,7 @@ Scorebot.prototype = {
 							var log = new Log(id, this.score.t + this.score.ct + 1, this.roundTime, type, side, html, text, connectionAttr);
 							this.logs.push(log);
 							
-							this.emit(type, connectionAttr);
+							this.emitS(type, connectionAttr);
 						}
 					}
 				}.bind(this));
@@ -275,6 +335,8 @@ Scorebot.prototype = {
 				}.bind(this));
 
 				this.socket.on('scoreboard', function (scoreboard) {
+					
+					console.log('scoreboard', scoreboard);
 					
 					for (var i = 0; i < scoreboard['CT'].length; i++) {
 						
@@ -293,6 +355,7 @@ Scorebot.prototype = {
 					this.player.ct.sort(killDifference);
 					
 					this.emit('scoreboardUpdated', this.player);
+					this.__isSave = true;
 				}.bind(this));
 				
 				this.socket.emit('readyForMatch', this.matchid);
@@ -332,7 +395,30 @@ Scorebot.prototype = {
 			}
 		}
 		
+		
 		this.__ee.emitEvent(event, args)
+	},
+	emitS: function() {
+		
+		if(arguments.length == 0)
+			return false;
+		
+		var event;
+		var args = [];
+		
+		for (var i = 0; i < arguments.length; i++) {
+			
+			if(i == 0) {
+				
+				event = arguments[i];
+			}else {
+				
+				args.push(arguments[i]);
+			}
+		}
+		
+		if(this.__isSave)
+			this.__ee.emitEvent(event, args)
 	},
 	getPlayer: function(name) {
 		
@@ -374,7 +460,7 @@ Scorebot.prototype = {
 			
 			if(oldPlayer.side != newPlayer.side) {
 				
-				var i = getPlayerIndexOf(newPlayer.name);
+				var i = this.getPlayerIndexOf(newPlayer.name);
 				
 				if(i >= this.player.ct.length) {
 					
@@ -394,7 +480,7 @@ Scorebot.prototype = {
 			}
 		}else {
 			
-			this.player[newPlayer.side].add(newPlayer);
+			this.player[newPlayer.side.toLowerCase()].push(newPlayer);
 		}
 	}
 }

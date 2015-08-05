@@ -11,32 +11,34 @@ function start(matchid) {
 
 bot.on('score', function(score) {
 	
-	document.getElementById('tscore').innerHTML = score.t;
-	document.getElementById('ctscore').innerHTML = score.ct;
+	console.log(score);
+	
+	document.getElementById('score1').innerHTML = score.t + "";
+	document.getElementById('score2').innerHTML = score.ct + "";
 });
 
 bot.on('kill', function(ka) {
 	
-	var killMsg = document.createElement('li');
-	var p1 = document.createElement('span');
-	var p2 = document.createElement('span');
-	var weapon = document.createElement('span');
+	if(ka.aggressor != null && ka.victim != null) {
+		var killMsg = document.createElement('li');
+		var p1 = document.createElement('span');
+		var p2 = document.createElement('span');
+		var weapon = document.createElement('span');
 	
-	
-	
-	p1.setAttribute('class', ka.aggressor.side.toLowerCase());
-	p2.setAttribute('class', ka.victim.side.toLowerCase());
-	weapon.setAttribute('class', ka.weapon);
-	
-	p1.appendChild(document.createTextNode(ka.aggressor.name));
-	p2.appendChild(document.createTextNode(ka.victim.name));
-	
-	killMsg.appendChild(p1);
-	killMsg.appendChild(p2);
-	killMsg.appendChild(weapon);
-	
-	document.getElementById('kills').appendChild(killMsg);
-})
+		p1.setAttribute('class', ka.aggressor.side.toLowerCase());
+		p2.setAttribute('class', ka.victim.side.toLowerCase());
+		weapon.setAttribute('class', ka.weapon);
+		
+		p1.appendChild(document.createTextNode(ka.aggressor.name));
+		p2.appendChild(document.createTextNode(ka.victim.name));
+		
+		killMsg.appendChild(p1);
+		killMsg.appendChild(p2);
+		killMsg.appendChild(weapon);
+		
+		document.getElementById('kills').insertBefore(killMsg, document.getElementById('kills').childNodes[0]);
+	}
+});
 
 bot.on('bombPlanted', function(bia) {
 	
@@ -62,8 +64,8 @@ bot.on('roundOver', function() {
 bot.on('scoreboardUpdated', function(player) {
 	
 	var html = {
-		'ct': document.getElementById('scoreboard_ct'),
-		't' : document.getElementById('scoreboard_t')
+		'ct': document.getElementById('t_player_ct'),
+		't' : document.getElementById('t_player_t')
 	};
 	
 	html.ct.innerHTML = '';
@@ -123,5 +125,8 @@ bot.on('scoreboardUpdated', function(player) {
 
 bot.on('time', function(time) {
 	
-	document.getElementById('time').innerHTML = time;
+	var min = Math.floor(time / 60);
+	var sec = time % 60;
+	
+	document.getElementById('time').innerHTML = min + ':' + sec;
 });
