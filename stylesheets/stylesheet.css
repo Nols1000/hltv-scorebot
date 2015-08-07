@@ -9,6 +9,39 @@ body {
   line-height: 1.5;
   color: #606c71; }
 
+#back {
+	
+	position: fixed;
+	left: 10px;
+	top: 10px;
+	font-size: 2em;
+}
+
+.right {
+	
+	float: right;
+}
+  
+.main-content .btn {
+	
+	background: linear-gradient(120deg, #155799, #159957);/* rgba(41,182,246, 0.5); */
+	border: 1px solid #DDDDDD;
+}
+
+.main-content .btn:hover {
+	
+	background: rgba(41,182,246, 0.8);
+	border: 1px solid #DDDDDD;
+}
+  
+.clearfix:after {
+    content: ".";
+    clear: both;
+    display: block;
+    visibility: hidden;
+    height: 0px;
+}
+  
 a {
   color: #1e6bb8;
   text-decoration: none; }

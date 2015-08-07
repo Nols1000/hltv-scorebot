@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>hltv-scorebot by Nols1000</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="../stylesheets/normalize.css" media="screen">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="../stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="../stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+	<div id="back">
+		<a href="../index.html"><i class="fa fa-chevron-left"></i></a>
+	</div>
+    <section class="page-header">
+      <h1 class="project-name">hltv-scorebot</h1>
+      <h2 class="project-tagline">Node.js Examples</h2>
+      <a href="browser.html" class="btn">Browser Examples</a>
+      <a href="../documentation/index.html" class="btn">Documentation</a>
+	</section>
+
+    <section class="main-content">
+      
+	  <h2>Basic</h2>
+	  <p>
+		Logs all events to the console.
+	  </p>
+	  
+	  <pre><code>
+// This example connects to an HLTV match and displays a message after each kill and after each round.
+
+var scorebot = require('hltv-scorebot');
+var EventEmitter = require('events').EventEmitter;
+var em = new EventEmitter();
+
+var currentScore = 'PLEASE WAIT FOR THE SCORE TO UPDATE!';
+
+// Connect to the scorebot                           \/ Replace with your match's matchid
+scorebot.connect('http://scorebot.hltv.org:10022', 364856, em, false);
+
+scorebot.on('kill', function(data) {
+	// Log all kills to console
+	console.log(data.agressor, 'killed', data.victim, 'with their', data.weapon, data.headshot ?  "(headshot)" : "");
+});
+
+scorebot.on('scoreUpdate', function(t, ct) {
+    // Update the score
+    currentScore = 'CT: ' + ct + ' | ' + 'T: ' + t;
+});
+
+scorebot.on('roundOver', function(data, scores) {
+	// Alert score and round winner to console.
+	console.log('The ' + data.side + '\'s won the round!');
+	console.log(currentScore);
+});
+	  </pre></code>
+	  
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/Nols1000/hltv-scorebot">hltv-scorebot</a> is maintained by <a href="https://github.com/Nols1000">Nols1000</a>.</span>
+      </footer>
+
+    </section>
+
+            <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-44437967-4");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
+

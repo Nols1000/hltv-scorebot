@@ -13,20 +13,55 @@ body {
 	overflow: hidden;
 }
 
+.de_dust2 {
+	
+	background: url('../img/de_dust2.jpg');
+}
+
+.de_cbble {
+	
+	background: url('../img/de_cbble.jpg');
+}
+
+.de_inferno {
+	
+	background: url('../img/de_inferno.png');
+}
+
+.de_mirage {
+	
+	background: url('../img/de_mirage.jpg');
+}
+
+.de_overpass {
+	
+	background: url('../img/de_overpass.jpg');
+}
+
+.de_train {
+	
+	background: url('../img/de_train.png');
+}
+
 #bomb {
 	
-	background: url('../img/c4.png');
+	background: url('../img/c4.png') no-repeat center center;
 	background-size: cover;
+	height: 25px;
+	width: 30%;
+	margin: auto;
 }
 
 #bomb.planted {
 	
-	background: url('../img/c4_planted.png');
+	background: url('../img/c4_planted.png') no-repeat center center;
+	background-size: cover;
 }
 
 #bomb.defused {
 	
-	background: url('../img/c4_defused.png');
+	background: url('../img/c4_defused.png') no-repeat center center;
+	background-size: cover;
 }
 
 #start {

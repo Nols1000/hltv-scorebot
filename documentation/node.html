@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Node.js Documentation - hltv-scorebot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="../stylesheets/normalize.css" media="screen">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="../stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="../stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+	<div id="back">
+		<a href="index.html"><i class="fa fa-chevron-left"></i></a>
+	</div>
+    <section class="page-header">
+      <h1 class="project-name">hltv-scorebot</h1>
+      <h2 class="project-tagline">Node.js Documentation</h2>
+      <a href="index.html" class="btn">Documentation</a>
+      <a href="browser.html" class="btn">Browser Documentation</a>
+      <a href="../examples/index.html" class="btn">Examples</a>
+	</section>
+
+    <section class="main-content">
+
+	<h2><a id="user-content-getting-started" class="anchor" href="#getting-started" aria-hidden="true"><span class="octicon octicon-link"></span></a>Getting Started</h2>
+
+<pre><code>npm install hltv-scorebot</code></pre>
+	
+<h2>
+<a id="methods" class="anchor" href="#methods" aria-hidden="true"><span class="octicon octicon-link"></span></a>Methods</h2>
+
+<ul>
+<li>
+<code>connect(url, matchid, events, displayText)</code>
+
+<ul>
+<li>
+<code>url</code> should be <code>'http://scorebot.hltv.org:10022'</code> for almost all cases.</li>
+<li>
+<code>matchid</code> can be found on every HLTV page with ScoreBot currently enabled.</li>
+<li>
+<code>events</code> should be an EventEmitter object.</li>
+<li>
+<code>displayText</code> should be either true or false. By enabling it, all the events of the match will be logged to the console, like the real HLTV Scorebot.</li>
+</ul>
+</li>
+<li><code>on(event, callback)</code></li>
+</ul>
+
+<h2>
+<a id="classes" class="anchor" href="#classes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Classes</h2>
+
+<ul>
+<li>Player
+
+<ul>
+<li>id</li>
+<li>side</li>
+<li>name</li>
+<li>kills</li>
+<li>deaths</li>
+<li>death</li>
+<li>element</li>
+</ul>
+</li>
+<li>Log
+
+<ul>
+<li>id</li>
+<li>round</li>
+<li>roundTime</li>
+<li>type</li>
+<li>side</li>
+<li>html</li>
+<li>text</li>
+<li>attr</li>
+</ul>
+</li>
+</ul>
+
+<h2>
+<a id="events" class="anchor" href="#events" aria-hidden="true"><span class="octicon octicon-link"></span></a>Events</h2>
+
+<ul>
+<li>mapChanged
+
+<ul>
+<li>mapAttr
+
+<ul>
+<li>map</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>roundOver
+
+<ul>
+<li>winner</li>
+<li>scores
+
+<ul>
+<li>t</li>
+<li>ct</li>
+</ul>
+</li>
+<li>knifeRound</li>
+</ul>
+</li>
+<li>roundStarted</li>
+<li>kill
+
+<ul>
+<li>killAttr
+
+<ul>
+<li>headshot</li>
+<li>weapon</li>
+<li>agressor</li>
+<li>victim</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>bombPlanted
+
+<ul>
+<li>bombInteractionAttr
+
+<ul>
+<li>player</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>bombDefused
+
+<ul>
+<li>bombInteractionAttr
+
+<ul>
+<li>player</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>playerLeft
+
+<ul>
+<li>connectionAttr
+
+<ul>
+<li>player</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>playerUpdate
+
+<ul>
+<li>Array[]</li>
+</ul>
+</li>
+<li>scoreUpdate
+
+<ul>
+<li>tScore</li>
+<li>ctScore</li>
+</ul>
+</li>
+<li>nameChange
+
+<ul>
+<li>nameAttr
+
+<ul>
+<li>old</li>
+<li>new</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>restart</li>
+</ul>
+	  
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/Nols1000/hltv-scorebot">hltv-scorebot</a> is maintained by <a href="https://github.com/Nols1000">Nols1000</a>.</span>
+      </footer>
+
+    </section>
+
+            <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-44437967-4");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
+

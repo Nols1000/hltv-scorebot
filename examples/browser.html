@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>hltv-scorebot by Nols1000</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="../stylesheets/normalize.css" media="screen">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="../stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="../stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+	<div id="back">
+		<a href="../index.html"><i class="fa fa-chevron-left"></i></a>
+	</div>
+    <section class="page-header">
+      <h1 class="project-name">hltv-scorebot</h1>
+      <h2 class="project-tagline">Browser Examples</h2>
+      <a href="node.html" class="btn">Node.js Examples</a>
+      <a href="../documentation/index.html" class="btn">Documentation</a>
+	</section>
+
+    <section class="main-content">
+      
+	  <h2>HUD</h2>
+	  <p style="width: 80%; float: left;">
+		A CSGO like HUD with allmost all information provided by the Scorebot.
+	  </p>
+	  <a href="hud.html" class="btn right">Live HUD</a>
+	  <span class="clearfix"></span>
+	
+	  <pre>
+hud.js
+	  <code>
+var bot = new Scorebot();
+
+function start(matchid) {
+	bot.connect({
+		'matchid': matchid
+	});
+	
+	document.getElementById('start').classList.add('slidedown');
+	document.getElementById('game').classList.add('slideindown');
+}
+
+bot.on('score', function(score) {
+	
+	console.log(score);
+	
+	document.getElementById('score1').innerHTML = score.t + "";
+	document.getElementById('score2').innerHTML = score.ct + "";
+});
+
+bot.on('kill', function(ka) {
+	
+	if(ka.aggressor != null && ka.victim != null) {
+		var killMsg = document.createElement('li');
+		var p1 = document.createElement('span');
+		var p2 = document.createElement('span');
+		var weapon = document.createElement('span');
+	
+		p1.setAttribute('class', ka.aggressor.side.toLowerCase());
+		p2.setAttribute('class', ka.victim.side.toLowerCase());
+		weapon.setAttribute('class', ka.weapon);
+		
+		p1.appendChild(document.createTextNode(ka.aggressor.name));
+		p2.appendChild(document.createTextNode(ka.victim.name));
+		
+		killMsg.appendChild(p1);
+		killMsg.appendChild(p2);
+		killMsg.appendChild(weapon);
+		
+		document.getElementById('kills').insertBefore(killMsg, document.getElementById('kills').childNodes[0]);
+	}
+});
+
+bot.on('bombPlanted', function(bia) {
+	
+	document.getElementById('bomb').setAttribute('class', "planted");
+});
+
+bot.on('bombDefused', function(bia) {
+	
+	document.getElementById('bomb').setAttribute('class', "defused");
+});
+
+bot.on('roundStarted', function() {
+	
+	document.getElementById('bomb').setAttribute('class', "");
+	
+	if((this.score.t + this.score.ct) == 15) {
+		
+		switch_sides();
+	}
+});
+
+bot.on('roundOver', function() {
+	
+	
+});
+
+bot.on('scoreboardUpdated', function(player) {
+	
+	var html = {
+		'ct': document.getElementById('t_player_ct'),
+		't' : document.getElementById('t_player_t')
+	};
+	
+	html.ct.innerHTML = '';
+	html.t.innerHTML = '';
+	
+	for(var i = 0; i < player.ct.length; i++) {
+		
+		var outerWrapper = document.createElement('tr');
+		var nameWrapper = document.createElement('td');
+		var killWrapper = document.createElement('td');
+		var deathWrapper = document.createElement('td');
+		var pointWrapper = document.createElement('td');
+		
+		nameWrapper.appendChild(document.createTextNode(player.ct[i].name));
+		killWrapper.appendChild(document.createTextNode(player.ct[i].kills));
+		deathWrapper.appendChild(document.createTextNode(player.ct[i].deaths));
+		pointWrapper.appendChild(document.createTextNode(player.ct[i].kills * 3));
+		
+		killWrapper.setAttribute('class', 'small');
+		deathWrapper.setAttribute('class', 'small');
+		pointWrapper.setAttribute('class', 'small');
+		
+		outerWrapper.appendChild(nameWrapper);
+		outerWrapper.appendChild(killWrapper);
+		outerWrapper.appendChild(deathWrapper);
+		outerWrapper.appendChild(pointWrapper);
+		
+		html.ct.appendChild(outerWrapper);
+	}
+	
+	for(var i = 0; i < player.t.length; i++) {
+		
+		var outerWrapper = document.createElement('tr');
+		var nameWrapper = document.createElement('td');
+		var killWrapper = document.createElement('td');
+		var deathWrapper = document.createElement('td');
+		var pointWrapper = document.createElement('td');
+		
+		nameWrapper.appendChild(document.createTextNode(player.t[i].name));
+		killWrapper.appendChild(document.createTextNode(player.t[i].kills));
+		deathWrapper.appendChild(document.createTextNode(player.t[i].deaths));
+		pointWrapper.appendChild(document.createTextNode(player.t[i].kills * 3));
+		
+		killWrapper.setAttribute('class', 'small');
+		deathWrapper.setAttribute('class', 'small');
+		pointWrapper.setAttribute('class', 'small');
+		
+		outerWrapper.appendChild(nameWrapper);
+		outerWrapper.appendChild(killWrapper);
+		outerWrapper.appendChild(deathWrapper);
+		outerWrapper.appendChild(pointWrapper);
+		
+		html.t.appendChild(outerWrapper);
+	}
+	
+})
+
+bot.on('time', function(time) {
+	
+	var min = Math.floor(time / 60);
+	var sec = time % 60;
+	
+	if(sec < 10) 
+		sec = '0' + sec;
+	
+	document.getElementById('time').innerHTML = min + ':' + sec;
+});
+
+bot.on('mapChanged', function(mapAttr) {
+	
+	document.getElementById('game').setAttribute('class', mapAttr.map);
+});
+
+function switch_sides() {
+	
+	var old1 = {
+		't': document.getElementById('team1').innerHTML,
+		's': document.getElementById('score1').innerHTML
+	};
+	
+	var old2 = {
+		't': document.getElementById('team2').innerHTML,
+		's': document.getElementById('score2').innerHTML
+	};
+	
+	document.getElementById('team1').innerHTML = old2.t;
+	document.getElementById('score1').innerHTML = old2.s;
+	document.getElementById('team2').innerHTML = old1.t;
+	document.getElementById('score2').innerHTML = old1.s;
+}
+	  </code></pre>
+	
+	  <pre>
+hud.html
+	  <code>
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+	&lt;head&gt;
+		&lt;title&gt;HUD Example&lt;/title&gt;
+		
+		&lt;link rel="stylesheet" href="style/hud.css" /&gt;
+		
+		&lt;script src="lib/socket.io.js"&gt;&lt;/script&gt;
+		&lt;script src="lib/EventEmitter.min.js"&gt;&lt;/script&gt;
+		&lt;script src="lib/Timer.js"&gt;&lt;/script&gt;
+		&lt;script src="Scorebot.js"&gt;&lt;/script&gt;
+		&lt;script src="js/hud.js"&gt;&lt;/script&gt;
+	&lt;/head&gt;
+	&lt;body&gt;
+		&lt;div id="start"&gt;
+			&lt;div id="start_wrapper"&gt;
+				&lt;input id="matchid" type="number" /&gt;
+				&lt;br /&gt;
+				&lt;button id="startbtn" onclick="start(document.getElementById('matchid').value);"&gt;Start Bot&lt;/button&gt;
+			&lt;/div&gt;
+		&lt;/div&gt;
+		&lt;div id="game"&gt;
+			&lt;div id="header" class="clearfix"&gt;
+				&lt;div id="header_wrapper1"&gt;
+					&lt;span id="team1" class="team"&gt;Team1&lt;/span&gt;
+					&lt;span id="score1" class="score"&gt;0&lt;/span&gt;
+				&lt;/div&gt;
+				&lt;div id="header_wrapper2"&gt;
+					&lt;span id="score2" class="score"&gt;0&lt;/span&gt;
+					&lt;span id="team2" class="team"&gt;Team2&lt;/span&gt;
+				&lt;/div&gt;
+				&lt;div id="header_wrapper0"&gt;
+					&lt;span id="time"&gt;1:35&lt;/span&gt;
+					&lt;br /&gt;
+					&lt;div id="bomb"&gt;&lt;/div&gt;
+				&lt;/div&gt;
+			&lt;/div&gt;
+			&lt;div id="scoreboard"&gt;
+				&lt;table id="scoreboard_ct" class="scoreboard_table"&gt;
+					&lt;thead&gt;
+						&lt;tr&gt;
+							&lt;td colspan="4" class="bg_ct"&gt;Counterterrorists&lt;/td&gt;
+						&lt;/tr&gt;
+					&lt;/thead&gt;
+					&lt;tbody id="t_player_ct"&gt;
+						&lt;tr&gt;
+							&lt;td&gt;Name&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;
+						&lt;/tr&gt;
+						&lt;tr&gt;
+							&lt;td&gt;Name&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;
+						&lt;/tr&gt;
+						&lt;tr&gt;
+							&lt;td&gt;Name&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;
+						&lt;/tr&gt;
+						&lt;tr&gt;
+							&lt;td&gt;Name&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;
+						&lt;/tr&gt;
+						&lt;tr&gt;
+							&lt;td&gt;Name&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;
+						&lt;/tr&gt;
+					&lt;/tbody&gt;
+				&lt;/table&gt;
+				&lt;table id="scoreboard_t" class="scoreboard_table"&gt;
+					&lt;thead&gt;
+						&lt;tr&gt;
+							&lt;td colspan="4" class="bg_t"&gt;Terrorists&lt;/td&gt;
+						&lt;/tr&gt;
+					&lt;/thead&gt;
+					&lt;tbody id="t_player_t"&gt;
+						&lt;tr&gt;
+							&lt;td&gt;Name&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;
+						&lt;/tr&gt;
+						&lt;tr&gt;
+							&lt;td&gt;Name&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;
+						&lt;/tr&gt;
+						&lt;tr&gt;
+							&lt;td&gt;Name&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;
+						&lt;/tr&gt;
+						&lt;tr&gt;
+							&lt;td&gt;Name&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;
+						&lt;/tr&gt;
+						&lt;tr&gt;
+							&lt;td&gt;Name&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;&lt;td class="small"&gt;0&lt;/td&gt;
+						&lt;/tr&gt;
+					&lt;/tbody&gt;
+				&lt;/table&gt;
+			&lt;/div&gt;
+			&lt;ul id="kills"&gt;
+			&lt;/ul&gt;
+			&lt;ul id="player_ct"&gt;
+				&lt;li&gt;&lt;/li&gt;
+				&lt;li&gt;&lt;/li&gt;
+				&lt;li&gt;&lt;/li&gt;
+				&lt;li&gt;&lt;/li&gt;
+				&lt;li&gt;&lt;/li&gt;
+			&lt;/ul&gt;
+			&lt;ul id="player_t"&gt;
+				&lt;li&gt;&lt;/li&gt;
+				&lt;li&gt;&lt;/li&gt;
+				&lt;li&gt;&lt;/li&gt;
+				&lt;li&gt;&lt;/li&gt;
+				&lt;li&gt;&lt;/li&gt;
+			&lt;/ul&gt;
+		&lt;/div&gt;
+	&lt;/body&gt;
+&lt;/html&gt;
+	  </pre></code>
+	  
+	  
+	  <pre>
+hud.css
+	  <code>
+body {	
+	padding: 0px;
+	margin: 0px;
+	
+	width: 100%;
+	height: 100%;
+	
+	background: #333333;
+	
+	top: 0px;
+	left: 0px;
+	
+	overflow: hidden;
+}
+
+.de_dust2 {
+	
+	background: url('../img/de_dust2.jpg');
+}
+
+.de_cbble {
+	
+	background: url('../img/de_cbble.jpg');
+}
+
+.de_inferno {
+	
+	background: url('../img/de_inferno.png');
+}
+
+.de_mirage {
+	
+	background: url('../img/de_mirage.jpg');
+}
+
+.de_overpass {
+	
+	background: url('../img/de_overpass.jpg');
+}
+
+.de_train {
+	
+	background: url('../img/de_train.png');
+}
+
+#bomb {
+	
+	background: url('../img/c4.png') no-repeat center center;
+	background-size: cover;
+	height: 25px;
+	width: 30%;
+	margin: auto;
+}
+
+#bomb.planted {
+	
+	background: url('../img/c4_planted.png') no-repeat center center;
+	background-size: cover;
+}
+
+#bomb.defused {
+	
+	background: url('../img/c4_defused.png') no-repeat center center;
+	background-size: cover;
+}
+
+#start {
+	
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	
+	width: 100%;
+	height: 100%;
+}
+
+#start_wrapper {
+	
+	width: 50%;
+	margin: auto;
+	margin-top: 10%;
+}
+
+#matchid {
+	
+	width: calc(100% - 20px);
+	padding: 10px;
+	border: 1px solid #000000;
+	margin: 10px 0px 10px 0px;
+}
+
+#startbtn {
+	
+	width: 100%;
+	padding: 10px;
+	border: 1px solid #76FF03;
+	background: #76FF03;
+}
+
+#game {
+	
+	position: absolute;
+	top: -100%;
+	left: 0px;	
+	width: 100%;
+	height: 100%;
+	
+	font-family: 'Roboto', sans-serif;
+	
+	color: #FFFFFF;
+}
+
+#header {
+	
+	top: 0px;
+	width: 100%;
+}
+
+.clearfix:after {
+    content: ".";
+    clear: both;
+    display: block;
+    visibility: hidden;
+    height: 0px;
+}
+
+.score {
+	
+	font-size: 2.4em;
+	margin: 20px;
+}
+
+.team {
+	
+	font-size: 1.5em;
+	line-height: 1.5em;
+}
+
+#header_wrapper0 {
+	
+	float: left;
+	width: 10%;
+	text-align: center;
+	padding-top: 0.4em;
+	padding-bottom: 0.4em;
+	
+	background: #666666;
+	box-shadow: 0px 0px 5px #000000;
+}
+
+#header_wrapper1 {
+	
+	float: left;
+	width: 45%;
+	text-align: right;
+	background: rgba(0,0,0,0.6);
+	box-shadow: 0px 0px 5px #000000;
+}
+
+#header_wrapper2 {
+	
+	float: right;
+	width: 45%;
+	background: rgba(0,0,0,0.6);
+	box-shadow: 0px 0px 5px #000000;
+}
+
+#time {
+	width: 100%;
+}
+
+#scoreboard {
+	
+	position: absolute;
+	
+	top: 20%;
+	left: 25%;
+	
+	margin: auto;
+	
+	width: 50%;
+	height: 60%;
+	
+	background: rgba(0,0,0,0.8);
+}
+
+#scoreboard_ct {
+	
+	position: absolute;
+	top: 0%;
+}
+
+#scoreboard_t {
+	
+	position: absolute;
+	top: 50%;
+}
+
+.scoreboard_table {
+	width: 100%;
+	overflow: auto;
+}
+
+.scoreboard_table td {
+	
+	padding: 5px;
+}
+
+.scoreboard_table td.small {
+	
+	width: 3em;
+}
+
+.bg_ct {
+	
+	background: #0000FF;
+}
+
+.bg_t {
+	
+	background: #FF0000;
+}
+
+#kills {
+	
+	position: absolute;
+	top: 50px;
+	right: 10px;
+	
+	width: 20%;
+	min-height: 300px;
+	
+	list-style: none;
+	padding: 10px;
+}
+
+#kills li {
+	
+	width: 100%;
+	padding: 5px;
+	margin-bottom: 10px;
+	text-align: right;
+	border: 2px solid #FF0000;
+	border-radius: 7px;
+	
+	background: rgba(0,0,0,0.5);
+}
+
+.t {
+	
+	color: #FF0000;
+	margin-left: 5px;
+	margin-right: 5px;
+}
+
+.ct {
+	
+	color: #0000FF;
+	margin-left: 5px;
+	margin-right: 5px;
+}
+
+.slideinup {
+	
+	top: 0% !important;
+	animation: slideinup 1s;
+}
+
+.slideup {
+	
+	top: -100% !important;
+	animation: slideup 1s;
+}
+
+.slideindown {
+	
+	top: 0% !important;
+	animation: slideindown 1s;
+}
+
+.slidedown {
+	
+	top: 100% !important;
+	animation: slidedown 1s;
+}
+
+@keyframes disaper {
+	0% {
+		opacity: 1;
+	}
+	100 % {
+		opacity: 0;
+	}
+}
+
+@keyframes aper {
+	0% {
+		opacity: 0;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+
+@keyframes slideup {
+	
+	from {
+		
+		top: 0%;
+	}
+	to {
+		top: -100%;
+	}
+}
+
+@keyframes slidedown {
+	
+	from {
+		
+		top: 0%;
+	}
+	to {
+		top: 100%;
+	}
+}
+
+@keyframes slideinup {
+	
+	from {
+		
+		top: 100%;
+	}
+	to {
+		top: 0%;
+	}
+}
+
+@keyframes slideindown {
+	
+	from {
+		
+		top: -100%;
+	}
+	to {
+		top: 0%;
+	}
+}
+
+
+#player_ct {
+	
+	position: absolute;
+	bottom: 0px;
+	right: calc(50% + 10px);
+	
+	list-style: none;
+	padding: 0px;
+}
+
+#player_t {
+	
+	position: absolute;
+	bottom: 0px;
+	left: calc(50% + 10px);
+	
+	list-style: none;
+	padding: 0px;
+}
+
+#player_ct li {
+	
+	float: right;
+	width: 80px;
+	height: 80px;
+	margin: 3px;
+	background: #0000FF;
+}
+
+#player_t li {
+	
+	float: left;
+	width: 80px;
+	height: 80px;
+	margin: 3px;
+	background: #FF0000;
+}
+	  </pre></code>
+	  
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/Nols1000/hltv-scorebot">hltv-scorebot</a> is maintained by <a href="https://github.com/Nols1000">Nols1000</a>.</span>
+      </footer>
+
+    </section>
+
+            <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-44437967-4");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
+

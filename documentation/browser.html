@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>hltv-scorebot by Nols1000</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="../stylesheets/normalize.css" media="screen">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="../stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="../stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+	<div id="back">
+		<a href="index.html"><i class="fa fa-chevron-left"></i></a>
+	</div>
+    <section class="page-header">
+      <h1 class="project-name">hltv-scorebot</h1>
+      <h2 class="project-tagline">Browser Documentation</h2>
+      <a href="index.html" class="btn">Documentation</a>
+      <a href="node.html" class="btn">Node.js Documentation</a>
+      <a href="../examples/index.html" class="btn">Examples</a>
+	</section>
+
+    <section class="main-content">
+
+<h2><a id="user-content-getting-started" class="anchor" href="#getting-started" aria-hidden="true"><span class="octicon octicon-link"></span></a>Getting Started</h2>
+
+<p>This Libary requires EventEmitter by Olical (<a href="https://github.com/Olical/EventEmitter">https://github.com/Olical/EventEmitter</a>) and socket.io-client by the socket.io-team (<a href="https://github.com/socketio/socket.io-client">https://github.com/socketio/socket.io-client</a>). Both requirements are in the Repository (<a href="https://github.com/Nols1000/hltv-scorebot/tree/master/browser/lib">https://github.com/Nols1000/hltv-scorebot/tree/master/browser/lib</a>).</p>
+
+<pre><code>&lt;script src="lib/EventEmitter.min.js" type="text/javascript"&gt;
+&lt;/script&gt;
+&lt;script src="lib/socket.io.js" type="text/javascript"&gt;
+&lt;/script&gt;
+</code></pre>
+
+<p>Embedd the Libary after its requirements.</p>
+
+<pre><code>&lt;script src="Scorebot.js" type="text/javascript"&gt;
+&lt;/script&gt;
+</code></pre>
+
+<p>Then you can add your scripts using the Libary.</p>
+
+<pre><code>&lt;script src="example.js" type="text/javascript"&gt;
+&lt;/script&gt;
+</code></pre>
+
+<p>example.js</p>
+
+<pre><code>var bot = new Scorebot();
+
+bot.connect({ 'matchid': 343324 });
+
+bot.on('kill', function(killAttr) {
+    console.log(killAttr.agressor.name, 'killed', killAttr.victim.name, 'with', killAttr.weapon, killAttr.headshot ? '(headshot)' : '');
+});
+
+bot.on('mapChanged', function(mapAttr) {
+    console.log('Map changed to', mapAttr.map, '.');
+});
+
+bot.on('restarted', function() {
+    console.log('Server was restarted.');
+});
+
+bot.on('roundOver', function(winner) {
+    console.log(winner.side, 'wins the round.');
+});
+
+bot.on('roundStarted', function() {
+    console.log('Round started.');
+});
+
+bot.on('bombPlanted', function(bombInteractionAttr) {
+    console.log(bombInteractionAttr.player.name, 'planted the bomb.');
+});
+
+bot.on('bombDefused', function(bombInteractionAttr) {
+    console.log(bombInteractionAttr.player.name, 'defused the bomb');
+});
+
+bot.on('nameChange', function(nameAttr) {
+    console.log(nameAttr.old, 'is now', nameAttr.new);
+});
+
+bot.on('playerLeft', function(connectionAttr) {
+    console.log(connectionAttr.player.name, 'left the game.');
+});
+
+bot.on('score', function(score) {
+    console.log('New Score: T', score.t, '-', score.ct, 'CT');
+});
+
+bot.on('scoreboardUpdated', function(player) {
+    console.log(JSON.stringify(player));
+});
+</code></pre>
+
+<h2><a id="user-content-documentation" class="anchor" href="#documentation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Documentation</h2>
+
+<h3><a id="user-content-player" class="anchor" href="#player" aria-hidden="true"><span class="octicon octicon-link"></span></a>Player</h3>
+
+<pre><code>new Player(Integer id, String side, String name, Integer kills, Integer deaths, Boolean death);
+</code></pre>
+
+<h3><a id="user-content-log" class="anchor" href="#log" aria-hidden="true"><span class="octicon octicon-link"></span></a>Log</h3>
+
+<pre><code>new Log(Integer id, Integer round, Integer roundTime, String type, String side, String html, String text, String attr);
+</code></pre>
+
+<h3><a id="user-content-scorebot" class="anchor" href="#scorebot" aria-hidden="true"><span class="octicon octicon-link"></span></a>Scorebot</h3>
+
+<pre><code>new Scorebot();
+</code></pre>
+
+<h3><a id="user-content-fields" class="anchor" href="#fields" aria-hidden="true"><span class="octicon octicon-link"></span></a>Fields</h3>
+
+<pre><code>this.port           = 10022;
+this.url            = 'http://scorebot.hltv.org';
+this.matchid        = 0;
+
+this.reconnected    = false;
+this.socket         = null;
+this.matchRoundTime = 105;
+this.matchBombTime  = 35;
+this.roundTime      = 0;
+this.knifeKills     = 0;
+this.matchRoundOver = false;
+this.bombPlanted    = false;
+this.knifeRound     = false;
+this.logs           = [];
+
+this.score          = { ct: '0', t: '0' };
+this.player         = { ct: [], t: []};
+</code></pre>
+
+<h4><a id="user-content-connect" class="anchor" href="#connect" aria-hidden="true"><span class="octicon octicon-link"></span></a>connect</h4>
+
+<pre><code>bot.connect(options)
+</code></pre>
+
+<p>Connect to a Scorebot. 
+<code>options</code> is required.</p>
+
+<pre><code>var bot = new Scorebot();
+
+var options = {
+    port: 10022,
+    url: 'http://scorebot.hltv.org',
+    matchid: 33423
+};
+
+bot.connect(options);
+</code></pre>
+
+<h4><a id="user-content-on" class="anchor" href="#on" aria-hidden="true"><span class="octicon octicon-link"></span></a>on</h4>
+
+<p>Register EventListener.
+(eventName, callbackFunction)</p>
+
+<pre><code>bot.on('event', function(arg0, arg1, ...) {
+
+});
+</code></pre>
+
+<h4><a id="user-content-emit" class="anchor" href="#emit" aria-hidden="true"><span class="octicon octicon-link"></span></a>emit</h4>
+
+<p>Fire a Event.
+(eventName, arguments ...)</p>
+
+<pre><code>bot.emit('event', arg0, arg1, ...);
+</code></pre>
+
+<h4><a id="user-content-getplayer" class="anchor" href="#getplayer" aria-hidden="true"><span class="octicon octicon-link"></span></a>getPlayer</h4>
+
+<p>Get a PlayerObject by Name. 
+Returns <code>null</code> if thers is no Player with this name.
+(playerName)</p>
+
+<pre><code>var player = bot.getPlayer(name);
+</code></pre>
+
+<h4><a id="user-content-getplayerindexof" class="anchor" href="#getplayerindexof" aria-hidden="true"><span class="octicon octicon-link"></span></a>getPlayerIndexOf</h4>
+
+<p>Get the index of a Player by Name.
+Returns <code>-1</code> if there is no Player with this name.
+Returns <code>index + CT-Player Amount</code> for T-Players.</p>
+
+<pre><code>var index = bot.getPlayerIndexOf(name);
+
+if(index &gt;= player.ct.lenght) {
+    var p = player.t[index - player.ct.lenght];
+}else {
+    var p = player.ct[index];
+}
+</code></pre>
+	  
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/Nols1000/hltv-scorebot">hltv-scorebot</a> is maintained by <a href="https://github.com/Nols1000">Nols1000</a>.</span>
+      </footer>
+
+    </section>
+		
+            <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-44437967-4");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
+
