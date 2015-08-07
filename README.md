@@ -93,6 +93,28 @@ new Log(Integer id, Integer round, Integer roundTime, String type, String side, 
 new Scorebot();
 ```
 
+### Fields 
+
+```
+this.port           = 10022;
+this.url            = 'http://scorebot.hltv.org';
+this.matchid		= 0;
+
+this.reconnected    = false;
+this.socket         = null;
+this.matchRoundTime = 105;
+this.matchBombTime  = 35;
+this.roundTime      = 0;
+this.knifeKills     = 0;
+this.matchRoundOver = false;
+this.bombPlanted    = false;
+this.knifeRound     = false;
+this.logs           = [];
+
+this.score 			= { ct: '0', t: '0' };
+this.player         = { ct: [], t: []};
+```
+
 #### connect
 ```
 bot.connect(options)

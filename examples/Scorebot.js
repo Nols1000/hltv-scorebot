@@ -7,11 +7,12 @@ Player = function () {
     
 	this.id      = arguments[0];
     this.side    = arguments[1];
-    this.name    = arguments[2];
-    this.kills   = arguments[3];
-    this.deaths  = arguments[4];
+	this.clan    = arguments[2];
+    this.name    = arguments[3];
+    this.kills   = arguments[4];
+    this.deaths  = arguments[5];
     this.death   = false;
-    this.element = null;
+    this.element = arguments[6];
 }
 
 Log = function () {
@@ -341,13 +342,13 @@ Scorebot.prototype = {
 					for (var i = 0; i < scoreboard['CT'].length; i++) {
 						
 						var player = scoreboard['CT'][i];
-						var p = new Player(player['id'], 'CT', player['name'], player['score'], player['deaths']);
+						var p = new Player(player['id'], 'CT', player['name'].split(" ")[0], player['name'], player['score'], player['deaths'], player);
 						this.updateScoreboard(p);
 					}
 					
 					for (var i = 0; i < scoreboard['TERRORIST'].length; i++) {
 						var player = scoreboard['TERRORIST'][i];
-						var p = new Player(player['id'], 'T', player['name'], player['score'], player['deaths']);
+						var p = new Player(player['id'], 'T', player['name'].split(" ")[0], player['name'], player['score'], player['deaths'], player);
 						this.updateScoreboard(p);
 					}
 					

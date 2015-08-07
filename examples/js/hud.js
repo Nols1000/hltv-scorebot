@@ -42,18 +42,22 @@ bot.on('kill', function(ka) {
 
 bot.on('bombPlanted', function(bia) {
 	
-	document.getElementById('bomb').classList.add('planted');
+	document.getElementById('bomb').setAttribute('class', "planted");
 });
 
 bot.on('bombDefused', function(bia) {
 	
-	document.getElementById('bomb').classList.remove('planted');
-	document.getElementById('bomb').classList.add('defused');
+	document.getElementById('bomb').setAttribute('class', "defused");
 });
 
 bot.on('roundStarted', function() {
 	
-	document.getElementById('bomb').classList = [];
+	document.getElementById('bomb').setAttribute('class', "");
+	
+	if((this.score.t + this.score.ct) == 15) {
+		
+		switch_sides();
+	}
 });
 
 bot.on('roundOver', function() {
@@ -128,5 +132,31 @@ bot.on('time', function(time) {
 	var min = Math.floor(time / 60);
 	var sec = time % 60;
 	
+	if(sec < 10) 
+		sec = '0' + sec;
+	
 	document.getElementById('time').innerHTML = min + ':' + sec;
 });
+
+bot.on('mapChanged', function(mapAttr) {
+	
+	document.getElementById('game').setAttribute('class', mapAttr.map);
+});
+
+function switch_sides() {
+	
+	var old1 = {
+		't': document.getElementById('team1').innerHTML,
+		's': document.getElementById('score1').innerHTML
+	};
+	
+	var old2 = {
+		't': document.getElementById('team2').innerHTML,
+		's': document.getElementById('score2').innerHTML
+	};
+	
+	document.getElementById('team1').innerHTML = old2.t;
+	document.getElementById('score1').innerHTML = old2.s;
+	document.getElementById('team2').innerHTML = old1.t;
+	document.getElementById('score2').innerHTML = old1.s;
+}
