@@ -1,5 +1,4 @@
 var io           = require('socket.io-client');
-var $            = require('jquery')(require("jsdom").jsdom().parentWindow);
 var EventEmitter = require('events').EventEmitter;
 var ee           = new EventEmitter();
 
@@ -22,8 +21,13 @@ var player = {
 	'h' : []
 };
 
-require('./player');
-require('./log');
+require('./lib/player');
+require('./lib/log');
+
+String.prototype.strip = function() {
+	if(!this.length) return "";
+	return this.replace(/<\/?[^>]+(>|$)/g, "");
+}
 
 /*********************
 ** Define functions **
@@ -48,7 +52,7 @@ module.exports.connect = function(url, matchid, events, displayText) {
 					var type        = "default";
 					var side        = "unknown";
 					var html        =  line;
-					var text        =  $("<div>"+html+"</div>").text();
+					var text        =  html.strip();
 					var defaultAttr = {};
 					
 					var killAttr = {

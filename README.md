@@ -2,11 +2,11 @@
 
 ##Methods
 
-- `connect(url, matchid, events, displayText)`
+- `connect(url, matchid, events, debug)`
     - `url` should be `'http://scorebot.hltv.org:10022'` for almost all cases.
     - `matchid` can be found on every HLTV page with ScoreBot currently enabled.
     - `events` should be an EventEmitter object.
-    - `displayText` should be either true or false. By enabling it, all the events of the match will be logged to the console, like the real HLTV Scorebot.
+    - `debug` should be either true or false. By enabling it, all the events of the match will be logged to the console, like the real HLTV Scorebot.
 - `on(event, callback)`
 
 ##Classes

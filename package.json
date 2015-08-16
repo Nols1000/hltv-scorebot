@@ -26,8 +26,7 @@
   "bugs": {
     "url": "https://github.com/Nols1000/hltv-scorebot/issues"
   },
-  "homepage": "https://github.com/Nols1000/hltv-scorebot",
-  "readme": "README.md",
+  "homepage": "http://nols1000.github.io/hltv-scorebot",
   "_id": "hltv-scorebot@0.1.4",
   "_shasum": "6ba05fe22774481ca67590d5034022a623723a05",
   "_from": "hltv-scorebot@"
