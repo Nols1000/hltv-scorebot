@@ -2,15 +2,6 @@ var io           = require('socket.io-client');
 var EventEmitter = require('events').EventEmitter;
 var ee           = new EventEmitter();
 
-var matchRoundTime = 105;
-var matchBombTime  = 35;
-var roundTime      = 0;
-var knifeKills     = 0;
-var matchRoundOver = false;
-var bombPlanted    = false;
-var knifeRound     = false;
-var logs           = [];
-
 var score  = {
 	't':  0,
 	'ct':  0
@@ -35,6 +26,14 @@ String.prototype.strip = function() {
 
 module.exports = function() {
 	
+	var matchRoundTime = 105;
+	var matchBombTime  = 35;
+	var roundTime      = 0;
+	var knifeKills     = 0;
+	var matchRoundOver = false;
+	var bombPlanted    = false;
+	var knifeRound     = false;
+	var logs           = [];
 }
 
 module.exports.connect = function(url, matchid, events, displayText) {
