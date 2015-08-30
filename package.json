@@ -1,8 +1,8 @@
 {
   "name": "hltv-scorebot",
-  "version": "0.1.6",
-  "description": "Connecting to HLTV's ScoreBot",
-  "main": "scorebot.js",
+  "version": "0.2.0",
+  "description": "Connecting to HLTV's scorebot.",
+  "main": "Scorebot.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -17,7 +17,9 @@
     "hltv",
     "scorebot",
     "node",
-    "js"
+    "js",
+	"browser",
+	"client"
   ],
   "author": {
     "name": "Nols1000"

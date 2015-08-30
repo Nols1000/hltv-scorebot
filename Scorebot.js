@@ -1,421 +1,275 @@
-var io           = require('socket.io-client');
-var EventEmitter = require('events').EventEmitter;
-var ee           = new EventEmitter();
+var io 				= require('socket.io-client');
+var EE 				= require('events').EventEmitter;
+var inherits     	= require('util').inherits;
+var Player 			= require('./lib/Player.js');
+var HLTVPlayer		= require('./lib/HLTVPlayer.js');
+var KPlayer 		= require('./lib/KPlayer.js');
+var APlayer 		= require('./lib/APlayer.js'); 
+var PlayerManager 	= require('./lib/PlayerManager.js');
 
-var score  = {
-	't':  0,
-	'ct':  0
-};
-var player = {
-	't' : [], 
-	'ct': [],
-	'h' : []
-};
+var TERRORIST = 0;
+var COUNTERTERRORIST = 1;
 
-require('./lib/player');
-require('./lib/log');
+var OPTION_MATCHROUNDTIME = 0;
+var OPTION_MATCHBOMBTIME = 1;
+var OPTION_MATCHFREEZETIME = 2;
 
-String.prototype.strip = function() {
-	if(!this.length) return "";
-	return this.replace(/<\/?[^>]+(>|$)/g, "");
+function Scorebot() {
+	
+	this.ip 		= "";
+	this.port		= 0;
+	this.matchid 	= 0;
+	
+	this.socket		= null;
+	this.reconnect	= false;
+	
+	this.score 		= {};
+	this.player		= new PlayerManager();
+	this.map		= "de_dust";
+	this.time		= 0;
+	this.interval;
+	
+	this.lastAssister = { 'vID': -1, 'assister': new Player() };
+	
+	this.options 	= {};
+	
+	this.score[TERRORIST]					= 0;
+	this.score[COUNTERTERRORIST]			= 0;
+	
+	this.options[OPTION_MATCHROUNDTIME] 	= 105;
+	this.options[OPTION_MATCHBOMBTIME] 		= 35;
+	this.options[OPTION_MATCHFREEZETIME] 	= 15;
 }
 
-/*********************
-** Define functions **
-*********************/
+inherits(Scorebot, EE);
 
-module.exports = function() {
+Scorebot.prototype.connect = function() {
 	
-	var matchRoundTime = 105;
-	var matchBombTime  = 35;
-	var roundTime      = 0;
-	var knifeKills     = 0;
-	var matchRoundOver = false;
-	var bombPlanted    = false;
-	var knifeRound     = false;
-	var logs           = [];
+	this.ip			= arguments[0];
+	this.port 		= arguments[1];
+	this.matchid 	= arguments[2];
+	
+	this.socket		= io(this.ip + ':' + this.port);
+	
+	this.socket.on('connect', this.onConnect.bind(this));
 }
 
-module.exports.connect = function(url, matchid, events, displayText) {
-	var socket      = io(url);
-	var reconnected = false;
+Scorebot.prototype.onConnect = function() {
 	
-	socket.on('connect', function(res) {
-		events.emit('connect', socket, true);
+	if(!this.reconnect) {
 		
-		if (!reconnected) {
-			socket.on('log', function(log) {
-                for (var l = 0; l < log.lines.length; l++) {
-					var id          = 0;
-					var line        = log.lines[l];
-					var type        = "default";
-					var side        = "unknown";
-					var html        =  line;
-					var text        =  html.strip();
-					var defaultAttr = {};
-					
-					var killAttr = {
-						'headshot'  : false,
-						'weapon'    : 'ak47',
-						'aggressor' : 'Player1',
-						'victim'    : 'Player2'
-					};
-					
-					var bombInteractionAttr = {
-						'player' : 'Player1' 
-					};
-					
-					var connectionAttr = {
-						'player' : 'Player1' 
-					};
-					
-					var mapAttr = {
-						'map' : 'de_dust2'
-					};
-					
-					var winner = {
-						'side' : 'T'
-					};
-					
-					var scores = {
-						't' : score.t,
-						'ct' : score.ct
-					};
-					
-					if (displayText) {
-						console.log(text);
-					}
-					
-					if (text.indexOf('Map changed to:') != -1) {
-						type        = "mapChanged";
-						side        = "both";
-						mapAttr.map = text.substring(16, text.length);
-						
-						ee.emit(type, mapAttr);
-						
-						var nLog = new Log(id, score.t + score.ct + 1, roundTime, type, side, html, text, defaultAttr);
-						logs.push(nLog);
-					}
-					
-					if (text.indexOf('Game restarted')) {
-						type = "restarted";
-						side = "both";
-						
-						ee.emit(type);
-						
-						var nLog = new Log(id, score.t + score.ct + 1, roundTime, type, side, html, text, defaultAttr);
-						logs.push(nLog);
-					}
-					
-					if (text.indexOf('Round over') != -1) {
-						matchRoundOver = true;
-						type           = "roundOver";
-						side           = "both";
-						
-						if (text.indexOf('Winner: T') != -1) {
-							winner.side = 'T';
-							scores.t = parseInt(parseInt(scores.t) + 1).toString();
-							
-							ee.emit(type, winner, scores, knifeRound);
-						} else if (text.indexOf('Winner: CT') != -1) {
-							winner.side = 'CT';
-							scores.ct = parseInt(parseInt(scores.ct) + 1).toString();
-							
-							ee.emit(type, winner, scores, knifeRound);
-						} else if (text.indexOf('Winner: DRAW') != -1) {
-							winner.side = 'CT';
-							scores.ct = parseInt(parseInt(scores.ct) + 1).toString();
-						}
+		this.socket.on('log', this.onLog.bind(this));
+		this.socket.on('score', this.onScore.bind(this));
+		this.socket.on('scoreboard', this.onScoreboard.bind(this));
+	}
+	
+	this.socket.emit('readyForMatch', this.matchid);
+}
 
-						var nLog = new Log(id, score.t + score.ct + 1, roundTime, type, side, html, text, defaultAttr);
-						logs.push(nLog);
-					}
-					
-					if (text.indexOf('Round started') != -1) {
-						roundTime      = matchRoundTime;
-						matchRoundOver = false;
-                        bombPlanted    = false;
-						type           = "roundStarted";
-						side           = "both";
-						knifeRound     = false;
-						knifeKills     = 0;
-						
-						ee.emit(type);
-						
-						var nLog = new Log(id, score.t + score.ct + 1, roundTime, type, side, html, text, defaultAttr);
-						logs.push(nLog);
-						
-						resetPlayerDeathAttr();
-						
-					}
-					
-					if (line.indexOf('killed') != -1) {
-						type = 'kill';
-						
-						var i = text.indexOf('killed');
-					    killAttr.aggressor = module.exports.getPlayerByName(text.substring(0, i - 1));
-						
-						var j = text.indexOf('with');
-						killAttr.victim = module.exports.getPlayerByName(text.substring(i + 6 + 1, j - 1));
-						
-						if (killAttr.victim != null) {
-							killAttr.victim.death = true;
-						}
-						
-						var k = text.indexOf('(');
-						
-						if (k != -1) {
-							killAttr.headshot = true;
-							killAttr.weapon   = text.substring(j + 4 + 1, k - 1);
-						} else {
-							killAttr.headshot = false;
-							killAttr.weapon   = text.substring(j + 4 + 1, text.length);
-						}
-						
-						if (killAttr.weapon.indexOf("knife") > -1 || killAttr.weapon.indexOf("bayonet") > -1 || killAttr.weapon.indexOf("karam") > -1 || killAttr.weapon.indexOf("flip") > -1 || killAttr.weapon.indexOf("tactical") > -1 || killAttr.weapon.indexOf("huntsman") > -1 || killAttr.weapon.indexOf("falchion") > -1 || killAttr.weapon.indexOf("butterfly") > -1) {
-							knifeKills++;
-						}
-						
-						if (knifeKills >= 3) {
-							knifeRound = true;
-						}
-						
-						if (killAttr.aggressor != null) {
-							side = killAttr.aggressor.side.toLowerCase();
-						}
-						
-						ee.emit(type, killAttr)
-						
-						var nLog = new Log(id, score.t + score.ct + 1, roundTime, type, side, html, text, killAttr);
-						logs.push(nLog);
-					}
+Scorebot.prototype.onReconnect = function() {
+	
+	this.reconnect = true;
+	this.socket.emit('readyForMatch', this.matchid);
+}
 
-                    if (line.indexOf('planted the bomb') != -1) {
-                        roundTime   = matchBombTime;
-                        bombPlanted = true;
-						
-						type = "bombPlanted";
-						side = "t";
-						
-						var i = text.indexOf('planted the bomb');
-						bombInteractionAttr.player = module.exports.getPlayerByName(text.substring(0,i-1));
-						
-						ee.emit(type, bombInteractionAttr);
-						
-						var nLog = new Log(id, score.t + score.ct + 1, roundTime, type, side, html, text, bombInteractionAttr);
-						logs.push(nLog);
-                    }
-					
-					if (line.indexOf('defused the bomb') != -1) {
-						type = "bombDefused";
-						side = "ct";
-						
-						var i = text.indexOf('defused the bomb');
-						bombInteractionAttr.player = module.exports.getPlayerByName(text.substring(0, i - 1));
-						
-						ee.emit(type, bombInteractionAttr);
-						
-						var nLog = new Log(id, score.t + score.ct + 1, roundTime, type, side, html, text, bombInteractionAttr);
-						logs.push(nLog);
-                    }
-                    
-                    if (text.indexOf('changed name to') != -1) {
-                    	type = "nameChange";
-                    	
-                    	var names    = text.replace("changed name to ", "");
-                    	var oldName  = names.split(" ")[0];
-                    	var newName  = names.split(" ")[1];
-                    	var nameAttr = {
-                    		'old': oldName,
-                    		'new': newName
-                    	};
-                    	
-                    	ee.emit(type, nameAttr);
-                    }
-					
-					if (text.indexOf('has left the game') != -1) {
-						type = "playerLeft";
-						
-						var i = text.indexOf('has left the game');
-						connectionAttr.player = module.exports.getPlayerByName(text.substring(0, i - 1));
-						
-						if (connectionAttr.player != null) {
-							side = connectionAttr.player.side.toLowerCase();
-						}
-						
-						ee.emit(type, connectionAttr);
-						
-						var nLog = new Log(id, score.t + score.ct + 1, roundTime, type, side, html, text, connectionAttr);
-						logs.push(nLog);
-					}
-				}
-            });
-
-            socket.on('score', function (s) {
-				score.t  = s.tScore;
-				score.ct = s.ctScore;
-
-				ee.emit("scoreUpdate", s.tScore, s.ctScore);
-            });
-
-            socket.on('scoreboard', function (scoreboard) {
-				var nPlayer = {'t': [], 'ct': []};
-				
-                for (var i = 0; i < scoreboard['CT'].length; i++) {
-                    var p = scoreboard['CT'][i];
-					p = new Player(p['id'], 'CT', p['name'], p['score'], p['deaths']);
-                    updatePlayerList(p);
-                }
-				
-				for (var i = 0; i < scoreboard['TERRORIST'].length; i++) {
-                    var p = scoreboard['TERRORIST'][i];
-                    p = new Player(p['id'], 'T', p['name'], p['score'], p['deaths']);
-                    updatePlayerList(p);
-                }
-				
-                // sort players with most kills highest.
-                player.t.sort(killDifference);
-                player.ct.sort(killDifference);
-				
-				ee.emit('playerUpdate', player);
-            });
+Scorebot.prototype.onLog = function(logs) {
+	
+	logs = logs['log'];
+	
+	logs.forEach(function (log, index, array){
+		
+		for(event in log) {
 			
-			socket.emit('readyForMatch', matchid);
-        }
-    });
-
-    socket.on('reconnect', function () {
-		reconnected = true;
-        socket.emit('readyForMatch', matchid);
-    });
-}
-
-module.exports.on = function(event, trigger) {
-	ee.on(event, trigger);
-}
-
-module.exports.getPlayerByName = function(name) {
-	for (var i = 0; i < player.ct.length; i++) {
-		if (name.indexOf(player.ct[i].name) != -1) {
-			return player.ct[i];
-		}
-	}
-	
-	for (var j = 0; j < player.t.length; j++) {
-		if (name.indexOf(player.t[j].name) != -1) {
-			return player.t[j];
-		}
-	}
-	
-	return null;
-}
-
-function updateAllPlayer () {
-	console.log("+ CT - " + setLength(score.ct, 2) + " -------------------------------------------------------------------+");
-	
-	for (var j = 0; j < player.ct.length; j++) {
-		var p = player.ct[j];
-		console.log("| " + setLength(p.id + "", 2) + " | " + setLength(p.side, 2) + " | " + setLength(p.name, 50) + " | " + setLength(p.kills + "", 3) + " | " + setLength(p.deaths + "", 3) + " |" + stringBoolean(p.death) + "|");
-	}
-
-	console.log("+ T  - " + setLength(score.t, 2) + " -------------------------------------------------------------------+");
-
-	for (var j = 0; j < player.t.length; j++) {
-		var p = player.t[j];
-		console.log("| " + setLength(p.id + "", 2) + " | " + setLength(p.side, 2) + " | " + setLength(p.name, 50) + " | " + setLength(p.kills + "", 3) + " | " + setLength(p.deaths + "", 3) + " |" + stringBoolean(p.death) + "|");
-	}
-	
-	console.log("+----------------------------------------------------------------------------+");
-}
-
-function resetPlayerDeathAttr () {
-	for (var i = 0; i < player.ct.length; i++) {
-		player.ct[i].death = false;
-	}
-	
-	for (var j = 0; j < player.t.length; j++) {
-		player.t[j].death = false;
-	}
-}
-
-function updatePlayerList (p) {
-	if (module.exports.getPlayerByName(p.name) != null) {
-		for (var i = 0; i < player.ct.length; i++) {
-			if (p.name.indexOf(player.ct[i].name) != -1) {
-				if (p.side.indexOf("CT") != -1) {
-					if (typeof player.ct[i] != "undefined") {
-						player.ct[i].id     = p.id;
-						player.ct[i].side   = p.side;
-						player.ct[i].name   = p.name;
-						player.ct[i].kills  = p.kill;
-						player.ct[i].deaths = p.deaths;
-					} else {
-						player.ct[i] = p;
-					}
-				} else {
-					if (typeof player.ct[i] != "undefined") {
-						p.death = player.ct[i].death;
-					}
+			switch(event) {
+				
+				case 'Kill':
+					this.onKill(log[event]);
+					break;
+				case 'Assist':
+					this.onAssist(log[event]);
+					break;
+				case 'BombPlanted':
+					this.onBombPlanted(log[event]);
+					break;
+				case 'BombDefused':
+					this.onBombDefused(log[event]);
+					break;
+				case 'RoundStart':
+					this.onRoundStart(log[event]);
+					break;
+				case 'RoundEnd':
+					this.onRoundEnd(log[event]);
+					break;
+				case 'PlayerJoin':
+					this.onPlayerJoin(log[event]);
+					break;
+				case 'PlayerQuit':
+					this.onPlayerQuit(log[event]);
+					break;
+				case 'MapChange':
+					this.onMapChange(log[event]);
+					break;
+				case 'Restart':
+					this.onServerRestart(log[event]);
+					break;
+				default: 
 					
-					player.ct.splice(i, 1);
-					player.t.push(p);
-				}			
+					break;
 			}
 		}
+	}.bind(this));
+}
+
+Scorebot.prototype.onScore = function(score) {
 	
-		for (var j = 0; j < player.t.length; j++) {
-			if (p.name.indexOf(player.t[j].name) != -1) {
-				if (p.side.indexOf("T") != -1) {
-					if (typeof player.t[i] != "undefined") {
-						player.t[i].id     = p.id;
-						player.t[i].side   = p.side;
-						player.t[i].name   = p.name;
-						player.t[i].kills  = p.kill;
-						player.t[i].deaths = p.deaths;
-					} else {
-						player.t[i] = p;
-					}
-				} else {
-					if (typeof player.t[i] != "undefined") {
-						p.death =  player.t[i].death;
-					}
-					
-					player.t.splice(i, 1);
-					player.ct.push(p);
-				}
-			}
-		}
-	} else {
-		if (p.side.indexOf("CT") != -1) {
-			player.ct.push(p);
-		} else {
-			player.t.push(p);
+	this.score[TERRORIST] 			= score['tScore'];
+	this.score[COUNTERTERRORIST]	= score['ctScore'];
+	
+	this.emit('score', this.score[TERRORIST], this.score[COUNTERTERRORIST]);
+}
+
+Scorebot.prototype.onScoreboard = function(player) {
+	
+	for(var i = 0; i < player["TERRORIST"].length; i++) {
+		
+		var nPlayer = player["TERRORIST"][i];
+		
+		// Check for eBot created Players
+		if(nPlayer.score != (nPlayer.deaths * -1)) {
+			
+			var mPlayer = this.player.getByName(nPlayer.name) || new Player();
+				nPlayer = new HLTVPlayer(nPlayer.name, TERRORIST, nPlayer.score, nPlayer.deaths, nPlayer.alive);
+				mPlayer.mergeHLTVPlayer(nPlayer);
+			
+			this.player.set(TERRORIST, mPlayer);
 		}
 	}
+	
+	for(var i = 0; i < player["CT"].length; i++) {
+		
+		var nPlayer = player["CT"][i];
+		
+		// Check for eBot created Players
+		if(nPlayer.score != (nPlayer.deaths * -1)) {
+			
+			var mPlayer = this.player.getByName(nPlayer.name) || new Player();
+				nPlayer = new HLTVPlayer(nPlayer.name, COUNTERTERRORIST, nPlayer.score, nPlayer.deaths, nPlayer.alive);
+				mPlayer.mergeHLTVPlayer(nPlayer);
+			
+			this.player.set(COUNTERTERRORIST, mPlayer);
+		}
+	}
+	
+	this.emit('player', this.player);
 }
 
-function killDifference (obj, otherObj) {
-	var killDiff = parseInt(otherObj.kills, 10) - parseInt(obj.kills, 10);
-
-	if (killDiff == 0) {
-		return parseInt(obj.deaths, 10) - parseInt(otherObj.deaths, 10);
+Scorebot.prototype.onKill = function(event) {
+	
+	var killer = new KPlayer(event.killerId, event.killerSteamId, event.killerName, (event.killerSide == "TERRORIST") ? TERRORIST : COUNTERTERRORIST); 
+	var victim = new KPlayer(event.victimId, event.victimSteamId, event.victimName, (event.victimSide == "TERRORIST") ? TERRORIST : COUNTERTERRORIST); 
+	
+	var kPlayer = this.player.getByName(killer.name) || new Player();
+		kPlayer.mergeKPlayer(killer);
+		
+	var vPlayer = this.player.getByName(victim.name) || new Player();
+		vPlayer.mergeKPlayer(victim);
+	
+	this.player.set(killer.team, kPlayer);
+	this.player.set(victim.team, vPlayer);
+	this.emit('player', this.player);
+	
+	if(this.lastAssister.vID == vPlayer.id) {
+		
+		this.emit('kill', kPlayer, vPlayer, event.weapon, event.headshot, this.lastAssister.assister);
 	} else {
-		return killDiff;
+		
+		this.emit('kill', kPlayer, vPlayer, event.weapon, event.headshot);
 	}
 }
 
-function setLength (str, length) {
-	for (var i = str.length; i < length; i++) {
-		str = str + " ";
-	}
-
-	return str;
+Scorebot.prototype.onAssist = function(event) {
+	
+	var assister	= new APlayer(event.assisterId, event.assisterName, (event.assisterSide == "TERRORIST") ? TERRORIST : COUNTERTERRORIST)
+	var victim		= new APlayer(event.victimId, event.victimName, (event.victimSide == "TERRORIST") ? TERRORIST : COUNTERTERRORIST);
+	
+	var aPlayer = this.player.getByName(assister.name) || new Player();
+		aPlayer.mergeAPlayer(assister);
+		
+	var vPlayer = this.player.getByName(victim.name) || new Player();
+		vPlayer.mergeAPlayer(victim);
+		
+	this.player.set(assister.team, aPlayer);
+	this.player.set(victim.team, vPlayer);
+	this.emit('player', this.player);
+	
+	this.lastAssister = { 'vID': vPlayer.id, 'assister': aPlayer };
+	this.emit('assist', aPlayer, vPlayer);
 }
 
-function stringBoolean (bool) {
-	if (bool) {
-		return "X";
-	} else {
-		return " ";
-	}
+Scorebot.prototype.onBombPlanted = function(event) {
+	
+	this.setTime(this.options[OPTION_MATCHBOMBTIME]);
+	this.emit('bombplanted', this.player.getByName(event.player));
 }
+
+Scorebot.prototype.onBombDefused = function() {
+	
+	this.emit('bombdefused', this.player.getByName(event.player));
+}
+
+Scorebot.prototype.onRoundStart = function() {
+	
+	this.setTime(this.options[OPTION_MATCHROUNDTIME]);
+	this.emit('roundstart')
+}
+
+Scorebot.prototype.onRoundEnd = function(event) {
+	
+	this.setTime(this.options[OPTION_MATCHFREEZETIME]);
+	this.emit('roundend', (event.winner == "TERRORIST" ? TERRORIST : COUNTERTERRORIST), event.terroristScore, event.counterTerroristScore);
+}
+
+Scorebot.prototype.onPlayerJoin = function(event) {
+	
+	this.emit('playerjoin', event.player);
+}
+
+Scorebot.prototype.onPlayerQuit = function(event) {
+	
+	this.emit('playerquit', this.player.getByName(event.player));
+	
+	
+	this.player.del(event.playerName);
+	this.emit('player', this.player);
+}
+
+Scorebot.prototype.onServerRestart = function() {
+	
+	this.emit('restart');
+}
+
+Scorebot.prototype.onMapChange = function(event) {
+	
+	this.map = event.mapName;
+	this.emit('map', this.map);
+}
+
+Scorebot.prototype.setTime = function(time) {
+	
+	clearInterval(this.interval);
+	
+	this.time 	 	= time;
+	this.interval 	= setInterval(function() {
+		
+		this.time = this.time - 1;
+		this.emit('time', this.time);
+	}.bind(this), 1000);
+}
+
+Scorebot.prototype.Player 			= Player;
+Scorebot.prototype.HLTVPlayer 		= HLTVPlayer;
+Scorebot.prototype.KPlayer 			= KPlayer;
+Scorebot.prototype.APlayer			= APlayer;
+Scorebot.prototype.PlayerManager	= PlayerManager;
+
+module.exports = Scorebot;
