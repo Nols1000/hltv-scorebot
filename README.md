@@ -16,7 +16,7 @@ npm install hltv-scorebot
 5. Execute `npm install` (This should download and install all dependencies [currently only `socket.io-client@1.3.5`. Check out `package.json`]) 
 
 **Using HLTV-Scorebot:**
-```
+```javascript
 var Scorebot = require('hltv-scorebot');
 
 var sb = new Scorebot();
