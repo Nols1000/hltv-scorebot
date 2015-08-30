@@ -1,3 +1,4 @@
 node_modules/
 console.cmd
 Documentation.md
+.npmignore
