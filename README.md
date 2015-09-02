@@ -1,5 +1,7 @@
 # HLTV Scorebot
 
+[![npm](https://img.shields.io/npm/v/npm.svg)](https://www.npmjs.com/package/hltv-scorebot)
+
 ## Getting started
 
 **Get the module with the npm:**
@@ -36,7 +38,7 @@ var sb = new Scorebot();
 
 ## Constants
 
-- ### Team
+- Team
   - `TERRORIST = 0`
   - `COUNTERTERRORIST = 1`
 
