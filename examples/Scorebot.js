@@ -1,497 +1,472 @@
-String.prototype.strip = function() {
-	if(!this.length) return "";
-	return this.replace(/<\/?[^>]+(>|$)/g, "");
+/* * * * * * * * * * * * * * * *
+ * 	         Libary            *
+ * * * * * * * * * * * * * * * */
+
+var TERRORIST = 0;
+var COUNTERTERRORIST = 1;
+
+function sort(a, b) {
+		
+	if (a.kills > b.kills) {
+		
+		return -1;
+	} else if (a.kills < b.kills) {
+		
+		return 1;
+	} else if (a.deaths < b.deaths) {
+		
+		return -1;
+	} else if (a.deaths > b.deaths) {
+		
+		return 1;
+	}
+	
+	return 0;
 }
 
-Player = function () {
-    
-	this.id      = arguments[0];
-    this.side    = arguments[1];
-	this.clan    = arguments[2];
-    this.name    = arguments[3];
-    this.kills   = arguments[4];
-    this.deaths  = arguments[5];
-    this.death   = false;
-    this.element = arguments[6];
+function Player() {
+	
+	this.id 		= arguments[0] || 0;
+	this.steamID	= arguments[1] || '';
+	this.name		= arguments[2] || '';
+	this.team		= arguments[3] || -1;
+	this.kills		= arguments[4] || 0;
+	this.assists	= arguments[5] || 0;
+	this.deaths		= arguments[6] || 0;
+	this.alive		= arguments[7] || false;
 }
 
-Log = function () {
-    
-	this.id        = arguments[0];
-    this.round     = arguments[1];
-    this.roundTime = arguments[2];
-    this.type      = arguments[3];
-    this.side      = arguments[4];
-    this.html      = arguments[5];
-    this.text      = arguments[6];
-    this.attr      = arguments[7];
+Player.prototype.mergeHLTVPlayer = function(player) {
+	
+	this.name 	= player.name;
+	this.team 	= player.team;
+	this.kills	= player.kills;
+	this.deaths = player.deaths;
+	this.alive	= player.alive;
 }
+
+Player.prototype.mergeKPlayer = function(player) {
+	
+	this.id 		= player.id;
+	this.steamID	= player.steamID;
+	this.name 		= player.name;
+	this.team		= player.team;
+}
+
+Player.prototype.mergeAPlayer = function(player) {
+	
+	this.id 		= player.id;
+	this.name 		= player.name;
+	this.team		= player.team;
+	this.assists	= this.assists + 1;
+}
+
+function APlayer() {
+	
+	this.id		= arguments[0];
+	this.name	= arguments[1];
+	this.team 	= arguments[2];
+}
+
+function HLTVPlayer() {
+	
+	this.name 	= arguments[0];
+	this.team	= arguments[1];
+	this.kills	= arguments[2];
+	this.deaths = arguments[3];
+	this.alive	= arguments[4];
+}
+
+function KPlayer() {
+	
+	this.id 		= arguments[0];
+	this.steamID	= arguments[1];
+	this.name		= arguments[2];
+	this.team		= arguments[3];
+}
+
+function PlayerManager() {
+	
+	this.playerList = {};
+	
+	this.playerList[TERRORIST] 			= [];
+	this.playerList[COUNTERTERRORIST] 	= [];
+}
+
+PlayerManager.prototype.TERRORIST			= TERRORIST;
+PlayerManager.prototype.COUNTERTERRORIST	= COUNTERTERRORIST;
+
+PlayerManager.prototype.set = function(team, player) {
+	
+	var index = this.getIndex(player.name);
+	
+	if(index.team == team) {
+		
+		var team  = index.team;
+		var index = index.index;
+		
+		this.playerList[team][index] = player;
+	} else if(index.team > -1) {
+		
+		del(player.name);
+		
+		var index = this.playerList[team].length;
+		this.playerList[team][index] = player; 
+	} else {
+		
+		var index = this.playerList[team].length;
+		this.playerList[team][index] = player; 
+	}
+	
+	this.playerList[TERRORIST].sort(sort);
+	
+	this.playerList[COUNTERTERRORIST].sort(sort);
+}
+
+PlayerManager.prototype.get = function(team, index) {
+	
+	return this.playerList[team][index];
+}
+
+PlayerManager.prototype.getIndex = function(name) {
+	
+	for(var i = 0; i < this.playerList[TERRORIST].length; i++) {
+		
+		var player = this.playerList[TERRORIST][i];
+		
+		if(player.name == name) {
+			return {
+				'team': TERRORIST,
+				'index': i
+			};
+		}
+	}
+	
+	for(var i = 0; i < this.playerList[COUNTERTERRORIST].length; i++) {
+		
+		var player = this.playerList[COUNTERTERRORIST][i];
+		
+		if(player.name == name) {
+			return {
+				'team': COUNTERTERRORIST,
+				'index': i
+			};
+		}
+	}
+	
+	return {
+		'team': -1,
+		'index': -1
+	};
+}
+
+PlayerManager.prototype.getByName = function(name) {
+	
+	var index = this.getIndex(name);
+	var team  = index.team;
+	var index = index.index;
+	
+	if(team > -1) {
+		
+		return this.get(team, index);
+	} else {
+		
+		return null;
+	}
+}
+
+PlayerManager.prototype.getByNameAsync = function(name, cb) {
+	
+	var player = this.getByName(name);
+	
+	if(player != null) {
+		
+		cb(false, player);
+	}else {
+		
+		cb('Player not found', null);
+	}
+}
+
+PlayerManager.prototype.del = function(name) {
+	
+	var index = this.getIndex(name);
+	var team  = index.team;
+	var index = index.index;
+	
+	if(team > -1) {
+		
+		this.playerList[team].splice(index, 1);
+		return true;
+	} else {
+		
+		return false;
+	}
+} 
+
+ 
+/* * * * * * * * * * * * * * * *
+ * 	          Module           *
+ * * * * * * * * * * * * * * * */
+
+var OPTION_MATCHROUNDTIME = 0;
+var OPTION_MATCHBOMBTIME = 1;
+var OPTION_MATCHFREEZETIME = 2;
 
 function Scorebot() {
 	
-	this.port           = 10022;
-	this.url            = 'http://scorebot.hltv.org';
-	this.matchid		= 0;
+	this.ip 		= "";
+	this.port		= 0;
+	this.matchid 	= 0;
 	
-	this.reconnected    = false;
-	this.socket         = null;
-	this.matchRoundTime = 105;
-	this.matchBombTime  = 35;
-	this.roundTime      = 0;
-	this.knifeKills     = 0;
-	this.matchRoundOver = false;
-	this.bombPlanted    = false;
-	this.knifeRound     = false;
-	this.logs           = [];
+	this.socket		= null;
+	this.reconnect	= false;
 	
-	this.score 			= { ct: '0', t: '0' };
-	this.player         = { ct: [], t: []};
+	this.score 		= {};
+	this.player		= new PlayerManager();
+	this.map		= "de_dust";
+	this.time		= 0;
+	this.interval;
 	
-	this.__ee 			= new EventEmitter();
-	this.__timer        = {
-		
-		roundTimer: new Timer(this.matchRoundTime, function(time) {
-			this.emit('time', time)
-		}.bind(this)),
-		bombTimer : new Timer(this.matchBombTime, function(time) {
-			this.emit('time', time)
-		}.bind(this))
-	};
-	this.__isSave = false;
+	this.lastAssister = { 'vID': -1, 'assister': new Player() };
 	
-	this.on('kill', function(killAttr) {
-		console.log(killAttr.agressor.name, 'killed', killAttr.victim.name, 'with', killAttr.weapon, killAttr.headshot ? '(headshot)' : '');
-	});
-
-	this.on('mapChanged', function(mapAttr) {
-		console.log('Map changed to', mapAttr.map, '.');
-	});
-
-	this.on('restarted', function() {
-		console.log('Server was restarted.');
-	});
-
-	this.on('roundOver', function(winner) {
-		console.log(winner.side, 'wins the round.');
-	});
-
-	this.on('roundStarted', function() {
-		console.log('Round started.');
-	});
-
-	this.on('bombPlanted', function(bombInteractionAttr) {
-		console.log(bombInteractionAttr.player.name, 'planted the bomb.');
-	});
-
-	this.on('bombDefused', function(bombInteractionAttr) {
-		console.log(bombInteractionAttr.player.name, 'defused the bomb');
-	});
-
-	this.on('nameChange', function(nameAttr) {
-		console.log(nameAttr.old, 'is now', nameAttr.new);
-	});
-
-	this.on('playerLeft', function(connectionAttr) {
-		console.log(connectionAttr.player.name, 'left the game.');
-	});
-
-	this.on('score', function(score) {
-		console.log('New Score: T', score.t, '-', score.ct, 'CT');
-	});
-
-	this.on('scoreboardUpdated', function(player) {
-		//console.log(JSON.stringify(player));
-	});
+	this.options 	= {};
+	
+	this.score[TERRORIST]					= 0;
+	this.score[COUNTERTERRORIST]			= 0;
+	
+	this.options[OPTION_MATCHROUNDTIME] 	= 105;
+	this.options[OPTION_MATCHBOMBTIME] 		= 35;
+	this.options[OPTION_MATCHFREEZETIME] 	= 15;
 }
 
-Scorebot.prototype = {
-	connect: function(options) {
-		
-		this.port		= options.port || 10022;
-		this.url		= options.url  || 'http://scorebot.hltv.org';
-		this.matchid	= options.matchid;
-		
-		this.socket = io.connect(this.url + ':' + this.port);
+heir.inherit(Scorebot, EventEmitter);
 
-		this.socket.on('connect', function(res) {
-			if (!this.reconnected) {
-				
-				this.socket.on('log', function(msg) {
-					for (var l = 0; l < msg.lines.length; l++) {
-						var id          = l;
-						var line        = msg.lines[l];
-						var type        = "default";
-						var side        = "unknown";
-						var html        =  line;
-						var text        =  line.strip();
-						
-						console.log(text);
-						
-						var defaultAttr = {};
-						
-						var killAttr = {
-							'headshot'  : false,
-							'weapon'    : 'ak47',
-							'aggressor' : 'Player1',
-							'victim'    : 'Player2'
-						};
-						
-						var bombInteractionAttr = {
-							'player' : 'Player1' 
-						};
-						
-						var connectionAttr = {
-							'player' : 'Player1' 
-						};
-						
-						var mapAttr = {
-							'map' : 'de_dust2'
-						};
-						
-						var winner = {
-							'side' : 'T'
-						};
-						
-						var scores = {
-							't' : this.score.t,
-							'ct' : this.score.ct
-						};
-						
-						if (text.indexOf('Map changed to:') != -1) {
-							type        = "mapChanged";
-							side        = "both";
-							mapAttr.map = text.substring(16, text.length);
-							
-							var log = new Log(id, this.score.t + this.score.ct + 1, this.roundTime, type, side, html, text, defaultAttr);
-							this.logs.push(log);
-							
-							this.emit(type, mapAttr);
-						}
-						
-						if (text.indexOf('Game restarted')) {
-							type = "restarted";
-							side = "both";
-							
-							var log = new Log(id, this.score.t + this.score.ct + 1, this.roundTime, type, side, html, text, defaultAttr);
-							this.logs.push(log);
-							
-							this.emit(type);
-						}
-						
-						if (text.indexOf('Round over') != -1) {
-							
-							this.matchRoundOver = true;
-							
-							type           = "roundOver";
-							side           = "both";
-							
-							if (text.indexOf('Winner: T') != -1) {
-								winner.side = 'T';
-								scores.t = parseInt(parseInt(scores.t) + 1).toString();
-							} else if (text.indexOf('Winner: CT') != -1) {
-								winner.side = 'CT';
-								scores.ct = parseInt(parseInt(scores.ct) + 1).toString();
-							} else if (text.indexOf('Winner: DRAW') != -1) {
-								winner.side = 'CT';
-								scores.ct = parseInt(parseInt(scores.ct) + 1).toString();
-							}
-
-							var log = new Log(id, this.score.t + this.score.ct + 1, this.roundTime, type, side, html, text, defaultAttr);
-							this.logs.push(log);
-							
-							this.emit(type, winner);
-						}
-						
-						if (text.indexOf('Round started') != -1) {
-							this.roundTime      = this.matchRoundTime;
-							this.matchRoundOver = false;
-							this.bombPlanted    = false;
-							this.knifeRound     = false;
-							this.knifeKills     = 0;
-							
-							type           = "roundStarted";
-							side           = "both";
-							
-							this.__timer.roundTimer.reset();
-							this.__timer.bombTimer.reset()
-							this.__timer.roundTimer.start();
-							
-							var log = new Log(id, this.score.t + this.score.ct + 1, this.roundTime, type, side, html, text, defaultAttr);
-							this.logs.push(log);
-
-							this.emit(type);
-						}
-						
-						if (line.indexOf('killed') != -1) {
-							type = 'kill';
-							
-							var i = text.indexOf('killed');
-							killAttr.aggressor = this.getPlayer(text.substring(0, i - 1));
-							
-							var j = text.indexOf('with');
-							killAttr.victim = this.getPlayer(text.substring(i + 6 + 1, j - 1));
-							
-							if (killAttr.victim != null) {
-								killAttr.victim.death = true;
-							}
-							
-							var k = text.indexOf('(');
-							
-							if (k != -1) {
-								killAttr.headshot = true;
-								killAttr.weapon   = text.substring(j + 4 + 1, k - 1);
-							} else {
-								killAttr.headshot = false;
-								killAttr.weapon   = text.substring(j + 4 + 1, text.length);
-							}
-							
-							if (killAttr.weapon.indexOf("knife") > -1 || killAttr.weapon.indexOf("bayonet") > -1 || killAttr.weapon.indexOf("karam") > -1 || killAttr.weapon.indexOf("flip") > -1 || killAttr.weapon.indexOf("tactical") > -1 || killAttr.weapon.indexOf("huntsman") > -1 || killAttr.weapon.indexOf("falchion") > -1 || killAttr.weapon.indexOf("butterfly") > -1) {
-								this.knifeKills++;
-							}
-							
-							if (this.knifeKills >= 3) {
-								this.knifeRound = true;
-							}
-							
-							if (killAttr.aggressor != null) {
-								side = killAttr.aggressor.side.toLowerCase();
-							}
-							
-							var log = new Log(id, this.score.t + this.score.ct + 1, this.roundTime, type, side, html, text, killAttr);
-							this.logs.push(log);
-							
-							this.emitS(type, killAttr);
-						}
-
-						if (line.indexOf('planted the bomb') != -1) {
-							this.bombPlanted = true;
-							
-							type = "bombPlanted";
-							side = "t";
-							
-							var i = text.indexOf('planted the bomb');
-							bombInteractionAttr.player = this.getPlayer(text.substring(0,i-1));
-							
-							this.__timer.roundTimer.reset();
-							this.__timer.bombTimer.start();
-							
-							var log = new Log(id, this.score.t + this.score.ct + 1, this.roundTime, type, side, html, text, bombInteractionAttr);
-							this.logs.push(log);
-							
-							this.emitS(type, bombInteractionAttr);
-						}
-						
-						if (line.indexOf('defused the bomb') != -1) {
-							type = "bombDefused";
-							side = "ct";
-							
-							var i = text.indexOf('defused the bomb');
-							bombInteractionAttr.player = this.getPlayer(text.substring(0, i - 1));
-							
-							var log = new Log(id, this.score.t + this.score.ct + 1, this.roundTime, type, side, html, text, bombInteractionAttr);
-							this.logs.push(log);
-							
-							this.emitS(type, bombInteractionAttr);
-						}
-						
-						if (text.indexOf('changed name to') != -1) {
-							type = "nameChange";
-							
-							var names    = text.replace("changed name to ", "");
-							var oldName  = names.split(" ")[0];
-							var newName  = names.split(" ")[1];
-							var nameAttr = {
-								'old': oldName,
-								'new': newName
-							};
-							
-							this.getPlayer(oldName).name = newName;
-							
-							this.emit(type, nameAttr);
-						}
-						
-						if (text.indexOf('has left the game') != -1) {
-							type = "playerLeft";
-							
-							var i = text.indexOf('has left the game');
-							connectionAttr.player = this.getPlayer(text.substring(0, i - 1));
-							
-							if (connectionAttr.player != null) {
-								side = connectionAttr.player.side.toLowerCase();
-							}
-							
-							var log = new Log(id, this.score.t + this.score.ct + 1, this.roundTime, type, side, html, text, connectionAttr);
-							this.logs.push(log);
-							
-							this.emitS(type, connectionAttr);
-						}
-					}
-				}.bind(this));
-
-				this.socket.on('score', function (s) {
-					this.score.t  = s.tScore;
-					this.score.ct = s.ctScore;
-					
-					this.emit('score', this.score);
-				}.bind(this));
-
-				this.socket.on('scoreboard', function (scoreboard) {
-					
-					console.log('scoreboard', scoreboard);
-					
-					for (var i = 0; i < scoreboard['CT'].length; i++) {
-						
-						var player = scoreboard['CT'][i];
-						var p = new Player(player['id'], 'CT', player['name'].split(" ")[0], player['name'], player['score'], player['deaths'], player);
-						this.updateScoreboard(p);
-					}
-					
-					for (var i = 0; i < scoreboard['TERRORIST'].length; i++) {
-						var player = scoreboard['TERRORIST'][i];
-						var p = new Player(player['id'], 'T', player['name'].split(" ")[0], player['name'], player['score'], player['deaths'], player);
-						this.updateScoreboard(p);
-					}
-					
-					this.player.t.sort(killDifference);
-					this.player.ct.sort(killDifference);
-					
-					this.emit('scoreboardUpdated', this.player);
-					this.__isSave = true;
-				}.bind(this));
-				
-				this.socket.emit('readyForMatch', this.matchid);
-			}
-		}.bind(this));
-
-		this.socket.on('reconnect', function () {
-			this.reconnected = true;
-			this.socket.emit('readyForMatch', this.matchid);
-		}.bind(this));
-
-		this.socket.on('reconnect', function () {
-			this.reconnected = true;
-			this.socket.emit('readyForMatch', this.matchid)
-		}.bind(this));
-	},
-	on: function(event, callback) {
-		
-		this.__ee.addListener(event, callback);
-	},
-	emit: function() {
-		
-		if(arguments.length == 0)
-			return false;
-		
-		var event;
-		var args = [];
-		
-		for (var i = 0; i < arguments.length; i++) {
-			
-			if(i == 0) {
-				
-				event = arguments[i];
-			}else {
-				
-				args.push(arguments[i]);
-			}
-		}
-		
-		
-		this.__ee.emitEvent(event, args)
-	},
-	emitS: function() {
-		
-		if(arguments.length == 0)
-			return false;
-		
-		var event;
-		var args = [];
-		
-		for (var i = 0; i < arguments.length; i++) {
-			
-			if(i == 0) {
-				
-				event = arguments[i];
-			}else {
-				
-				args.push(arguments[i]);
-			}
-		}
-		
-		if(this.__isSave)
-			this.__ee.emitEvent(event, args)
-	},
-	getPlayer: function(name) {
-		
-		for (var i = 0; i < this.player.ct.length; i++) {
-			if (name.indexOf(this.player.ct[i].name) != -1) {
-				return this.player.ct[i];
-			}
-		}
+Scorebot.prototype.connect = function() {
 	
-		for (var j = 0; j < this.player.t.length; j++) {
-			if (name.indexOf(this.player.t[j].name) != -1) {
-				return this.player.t[j];
-			}
-		}
-		
-		return null;
-	},
-	getPlayerIndexOf: function(name) {
-		
-		for (var i = 0; i < this.player.ct.length; i++) {
-			if (name.indexOf(this.player.ct[i].name) != -1) {
-				return i;
-			}
-		}
+	this.ip			= arguments[0];
+	this.port 		= arguments[1];
+	this.matchid 	= arguments[2];
 	
-		for (var j = 0; j < this.player.t.length; j++) {
-			if (name.indexOf(this.player.t[j].name) != -1) {
-				return j + this.player.ct.length;
+	this.socket		= io(this.ip + ':' + this.port);
+	
+	this.socket.on('connect', this.onConnect.bind(this));
+}
+
+Scorebot.prototype.onConnect = function() {
+	
+	if(!this.reconnect) {
+		
+		this.socket.on('log', this.onLog.bind(this));
+		this.socket.on('score', this.onScore.bind(this));
+		this.socket.on('scoreboard', this.onScoreboard.bind(this));
+	}
+	
+	this.socket.emit('readyForMatch', this.matchid);
+}
+
+Scorebot.prototype.onReconnect = function() {
+	
+	this.reconnect = true;
+	this.socket.emit('readyForMatch', this.matchid);
+}
+
+Scorebot.prototype.onLog = function(logs) {
+	
+	logs = logs['log'];
+	
+	logs.forEach(function (log, index, array){
+		
+		for(event in log) {
+			
+			switch(event) {
+				
+				case 'Kill':
+					this.onKill(log[event]);
+					break;
+				case 'Assist':
+					this.onAssist(log[event]);
+					break;
+				case 'BombPlanted':
+					this.onBombPlanted(log[event]);
+					break;
+				case 'BombDefused':
+					this.onBombDefused(log[event]);
+					break;
+				case 'RoundStart':
+					this.onRoundStart(log[event]);
+					break;
+				case 'RoundEnd':
+					this.onRoundEnd(log[event]);
+					break;
+				case 'PlayerJoin':
+					this.onPlayerJoin(log[event]);
+					break;
+				case 'PlayerQuit':
+					this.onPlayerQuit(log[event]);
+					break;
+				case 'MapChange':
+					this.onMapChange(log[event]);
+					break;
+				case 'Restart':
+					this.onServerRestart(log[event]);
+					break;
+				default: 
+					
+					break;
 			}
 		}
+	}.bind(this));
+}
+
+Scorebot.prototype.onScore = function(score) {
+	
+	this.score[TERRORIST] 			= score['tScore'];
+	this.score[COUNTERTERRORIST]	= score['ctScore'];
+	
+	this.emit('score', this.score[TERRORIST], this.score[COUNTERTERRORIST]);
+}
+
+Scorebot.prototype.onScoreboard = function(player) {
+	
+	for(var i = 0; i < player["TERRORIST"].length; i++) {
 		
-		return -1;
-	},
-	updateScoreboard: function(newPlayer) {
+		var nPlayer = player["TERRORIST"][i];
 		
-		var oldPlayer = this.getPlayer(newPlayer.name);
-		
-		if(oldPlayer != null) {
+		// Check for eBot created Players
+		if(nPlayer.score != (nPlayer.deaths * -1)) {
 			
-			if(oldPlayer.side != newPlayer.side) {
-				
-				var i = this.getPlayerIndexOf(newPlayer.name);
-				
-				if(i >= this.player.ct.length) {
-					
-					i = i - this.player.ct.length;
-					
-					this.player.t.splice(i, 1);
-					this.player.ct.add(newPlayer);
-				}else {
-					
-					this.player.ct.splice(i, 1);
-					this.player.t.add(newPlayer);
-				}
-				
-			}else {
-				
-				oldPlayer = newPlayer;
-			}
-		}else {
+			var mPlayer = this.player.getByName(nPlayer.name) || new Player();
+				nPlayer = new HLTVPlayer(nPlayer.name, TERRORIST, nPlayer.score, nPlayer.deaths, nPlayer.alive);
+				mPlayer.mergeHLTVPlayer(nPlayer);
 			
-			this.player[newPlayer.side.toLowerCase()].push(newPlayer);
+			this.player.set(TERRORIST, mPlayer);
 		}
 	}
+	
+	for(var i = 0; i < player["CT"].length; i++) {
+		
+		var nPlayer = player["CT"][i];
+		
+		// Check for eBot created Players
+		if(nPlayer.score != (nPlayer.deaths * -1)) {
+			
+			var mPlayer = this.player.getByName(nPlayer.name) || new Player();
+				nPlayer = new HLTVPlayer(nPlayer.name, COUNTERTERRORIST, nPlayer.score, nPlayer.deaths, nPlayer.alive);
+				mPlayer.mergeHLTVPlayer(nPlayer);
+			
+			this.player.set(COUNTERTERRORIST, mPlayer);
+		}
+	}
+	
+	this.emit('player', this.player);
 }
 
-function killDifference (obj, otherObj) {
-	var killDiff = parseInt(otherObj.kills, 10) - parseInt(obj.kills, 10);
-
-	if (killDiff == 0) {
-		return parseInt(obj.deaths, 10) - parseInt(otherObj.deaths, 10);
+Scorebot.prototype.onKill = function(event) {
+	
+	var killer = new KPlayer(event.killerId, event.killerSteamId, event.killerName, (event.killerSide == "TERRORIST") ? TERRORIST : COUNTERTERRORIST); 
+	var victim = new KPlayer(event.victimId, event.victimSteamId, event.victimName, (event.victimSide == "TERRORIST") ? TERRORIST : COUNTERTERRORIST); 
+	
+	var kPlayer = this.player.getByName(killer.name) || new Player();
+		kPlayer.mergeKPlayer(killer);
+		
+	var vPlayer = this.player.getByName(victim.name) || new Player();
+		vPlayer.mergeKPlayer(victim);
+	
+	this.player.set(killer.team, kPlayer);
+	this.player.set(victim.team, vPlayer);
+	this.emit('player', this.player);
+	
+	if(this.lastAssister.vID == vPlayer.id) {
+		
+		this.emit('kill', kPlayer, vPlayer, event.weapon, event.headshot, this.lastAssister.assister);
 	} else {
-		return killDiff;
+		
+		this.emit('kill', kPlayer, vPlayer, event.weapon, event.headshot);
 	}
 }
+
+Scorebot.prototype.onAssist = function(event) {
+	
+	var assister	= new APlayer(event.assisterId, event.assisterName, (event.assisterSide == "TERRORIST") ? TERRORIST : COUNTERTERRORIST)
+	var victim		= new APlayer(event.victimId, event.victimName, (event.victimSide == "TERRORIST") ? TERRORIST : COUNTERTERRORIST);
+	
+	var aPlayer = this.player.getByName(assister.name) || new Player();
+		aPlayer.mergeAPlayer(assister);
+		
+	var vPlayer = this.player.getByName(victim.name) || new Player();
+		vPlayer.mergeAPlayer(victim);
+		
+	this.player.set(assister.team, aPlayer);
+	this.player.set(victim.team, vPlayer);
+	this.emit('player', this.player);
+	
+	this.lastAssister = { 'vID': vPlayer.id, 'assister': aPlayer };
+	this.emit('assist', aPlayer, vPlayer);
+}
+
+Scorebot.prototype.onBombPlanted = function(event) {
+	
+	this.setTime(this.options[OPTION_MATCHBOMBTIME]);
+	this.emit('bombplanted', this.player.getByName(event.player));
+}
+
+Scorebot.prototype.onBombDefused = function() {
+	
+	this.emit('bombdefused', this.player.getByName(event.player));
+}
+
+Scorebot.prototype.onRoundStart = function() {
+	
+	this.setTime(this.options[OPTION_MATCHROUNDTIME]);
+	this.emit('roundstart')
+}
+
+Scorebot.prototype.onRoundEnd = function(event) {
+	
+	this.setTime(this.options[OPTION_MATCHFREEZETIME]);
+	this.emit('roundend', (event.winner == "TERRORIST" ? TERRORIST : COUNTERTERRORIST), event.terroristScore, event.counterTerroristScore);
+}
+
+Scorebot.prototype.onPlayerJoin = function(event) {
+	
+	this.emit('playerjoin', event.player);
+}
+
+Scorebot.prototype.onPlayerQuit = function(event) {
+	
+	this.emit('playerquit', this.player.getByName(event.player));
+	
+	
+	this.player.del(event.playerName);
+	this.emit('player', this.player);
+}
+
+Scorebot.prototype.onServerRestart = function() {
+	
+	this.emit('restart');
+}
+
+Scorebot.prototype.onMapChange = function(event) {
+	
+	this.map = event.mapName;
+	this.emit('map', this.map);
+}
+
+Scorebot.prototype.setTime = function(time) {
+	
+	clearInterval(this.interval);
+	
+	this.time 	 	= time;
+	this.interval 	= setInterval(function() {
+		
+		this.time = this.time - 1;
+		this.emit('time', this.time);
+	}.bind(this), 1000);
+}
+
+Scorebot.prototype.Player 			= Player;
+Scorebot.prototype.HLTVPlayer 		= HLTVPlayer;
+Scorebot.prototype.KPlayer 			= KPlayer;
+Scorebot.prototype.APlayer			= APlayer;
+Scorebot.prototype.PlayerManager	= PlayerManager;

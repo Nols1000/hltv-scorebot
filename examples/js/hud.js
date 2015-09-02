@@ -40,12 +40,12 @@ bot.on('kill', function(ka) {
 	}
 });
 
-bot.on('bombPlanted', function(bia) {
+bot.on('bombPlanted', function(player) {
 	
 	document.getElementById('bomb').setAttribute('class', "planted");
 });
 
-bot.on('bombDefused', function(bia) {
+bot.on('bombDefused', function(player) {
 	
 	document.getElementById('bomb').setAttribute('class', "defused");
 });
@@ -60,12 +60,12 @@ bot.on('roundStarted', function() {
 	}
 });
 
-bot.on('roundOver', function() {
+bot.on('roundOver', function(winner, tScore, ctScore) {
 	
 	
 });
 
-bot.on('scoreboardUpdated', function(player) {
+bot.on('player', function(pm) {
 	
 	var html = {
 		'ct': document.getElementById('t_player_ct'),
