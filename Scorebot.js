@@ -248,7 +248,7 @@ Scorebot.prototype.connect = function() {
 	this.port 		= arguments[1];
 	this.matchid 	= arguments[2];
 	
-	this.socket		= io(this.ip + ':' + this.port);
+	this.socket		= io.connect(this.ip + ':' + this.port);
 	
 	this.socket.on('connect', this.onConnect.bind(this));
 }
@@ -455,13 +455,23 @@ Scorebot.prototype.onMapChange = function(event) {
 
 Scorebot.prototype.setTime = function(time) {
 	
+	console.log('clearInterval');
 	clearInterval(this.interval);
 	
 	this.time 	 	= time;
 	this.interval 	= setInterval(function() {
 		
 		this.time = this.time - 1;
-		this.emit('time', this.time);
+		
+		if(this.time < 0) {
+			
+			console.log('clearInterval');
+			clearInterval(this.interval);
+		}else {
+			
+			this.emit('time', this.time);
+		}
+		
 	}.bind(this), 1000);
 }
 

@@ -1,9 +1,23 @@
 var bot = new Scorebot();
 
-function start(matchid) {
-	bot.connect({
-		'matchid': matchid
-	});
+function start(source, matchid) {
+	
+	var ip 		= "localhost";
+	var port	= 10023;
+	
+	if(source == 0) { // Local
+		
+		ip 		= "http://localhost";
+		port	= 10023;
+	}else if(source == 1) {
+		
+		ip		= "http://scorebot.hltv.org";
+		port 	= 10023;
+	}
+	
+	console.log(ip+':'+port);
+	
+	bot.connect(ip, port, matchid);
 	
 	document.getElementById('start').classList.add('slidedown');
 	document.getElementById('game').classList.add('slideindown');
@@ -17,20 +31,20 @@ bot.on('score', function(score) {
 	document.getElementById('score2').innerHTML = score.ct + "";
 });
 
-bot.on('kill', function(ka) {
+bot.on('kill', function(kill, victim, weapon, headshot, assister) {
 	
-	if(ka.aggressor != null && ka.victim != null) {
+	if(killer != null && victim != null) {
 		var killMsg = document.createElement('li');
 		var p1 = document.createElement('span');
 		var p2 = document.createElement('span');
 		var weapon = document.createElement('span');
 	
-		p1.setAttribute('class', ka.aggressor.side.toLowerCase());
-		p2.setAttribute('class', ka.victim.side.toLowerCase());
-		weapon.setAttribute('class', ka.weapon);
+		p1.setAttribute('class', killer.team ? 'ct' : 'terrorist');
+		p2.setAttribute('class', victim.team ? 'ct' : 'terrorist');
+		weapon.setAttribute('class', weapon);
 		
-		p1.appendChild(document.createTextNode(ka.aggressor.name));
-		p2.appendChild(document.createTextNode(ka.victim.name));
+		p1.appendChild(document.createTextNode(killer.name));
+		p2.appendChild(document.createTextNode(victim.name));
 		
 		killMsg.appendChild(p1);
 		killMsg.appendChild(p2);
@@ -40,29 +54,24 @@ bot.on('kill', function(ka) {
 	}
 });
 
-bot.on('bombPlanted', function(player) {
+bot.on('bombplanted', function(player) {
 	
 	document.getElementById('bomb').setAttribute('class', "planted");
 });
 
-bot.on('bombDefused', function(player) {
+bot.on('bombdefused', function(player) {
 	
 	document.getElementById('bomb').setAttribute('class', "defused");
 });
 
-bot.on('roundStarted', function() {
+bot.on('roundstarted', function() {
 	
 	document.getElementById('bomb').setAttribute('class', "");
-	
-	if((this.score.t + this.score.ct) == 15) {
-		
-		switch_sides();
-	}
 });
 
-bot.on('roundOver', function(winner, tScore, ctScore) {
+bot.on('roundover', function(winner, tScore, ctScore) {
 	
-	
+	document.getElementById('kills').innerHTML = '';
 });
 
 bot.on('player', function(pm) {
@@ -138,7 +147,7 @@ bot.on('time', function(time) {
 	document.getElementById('time').innerHTML = min + ':' + sec;
 });
 
-bot.on('mapChanged', function(mapAttr) {
+bot.on('map', function(mapAttr) {
 	
 	document.getElementById('game').setAttribute('class', mapAttr.map);
 });

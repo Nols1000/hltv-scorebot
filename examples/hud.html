@@ -7,16 +7,20 @@
 		
 		<script src="lib/socket.io.js"></script>
 		<script src="lib/EventEmitter.min.js"></script>
-		<script src="lib/Timer.js"></script>
+		<script src="lib/heir.js"></script>
 		<script src="Scorebot.js"></script>
 		<script src="js/hud.js"></script>
 	</head>
 	<body>
 		<div id="start">
 			<div id="start_wrapper">
+				<select id="source">
+					<option value="0" select>LOCAL</option>
+					<option value="1">HLTV.ORG</option>
+				</select>
 				<input id="matchid" type="number" />
 				<br />
-				<button id="startbtn" onclick="start(document.getElementById('matchid').value);">Start Bot</button>
+				<button id="startbtn" onclick="start(document.getElementById('source').value, document.getElementById('matchid').value);">Start Bot</button>
 			</div>
 		</div>
 		<div id="game">
